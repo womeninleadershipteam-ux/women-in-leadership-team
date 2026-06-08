@@ -59,6 +59,10 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap",
       },
+      {
+        rel: "stylesheet",
+        href: "https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css",
+      },
     ],
   }),
   shellComponent: RootShell,

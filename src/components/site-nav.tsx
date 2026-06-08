@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { WilLogo } from './wil-logo';
 
 const links = [
   { to: '/', label: 'Home' },
@@ -15,10 +15,8 @@ export function SiteNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/40 bg-brand-cream/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <Link to="/" className="group flex items-center gap-2">
-          <span className="font-display text-lg font-semibold tracking-tight text-brand-ink">
-            Women in Leadership
-          </span>
+        <Link to="/" className="group flex items-center gap-2" aria-label="Women in Leadership home">
+          <WilLogo className="h-9 w-auto md:h-10" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -40,7 +38,7 @@ export function SiteNav() {
           className="md:hidden text-brand-ink"
           aria-label="Toggle menu"
         >
-          {open ? <X size={22} /> : <Menu size={22} />}
+          <i className={`bx ${open ? 'bx-x' : 'bx-menu'} text-2xl`} />
         </button>
       </div>
 

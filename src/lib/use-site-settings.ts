@@ -8,6 +8,8 @@ export type SiteSettings = {
   email: string | null;
   mission_statement: string | null;
   footer_tagline: string | null;
+  announcement_text: string | null;
+  announcement_active: boolean;
 };
 
 export function useSiteSettings() {

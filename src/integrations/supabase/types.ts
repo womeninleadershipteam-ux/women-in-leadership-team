@@ -238,8 +238,31 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
+          announcement_active: boolean
+          announcement_text: string | null
           email: string | null
           footer_tagline: string | null
           id: string
@@ -249,6 +272,8 @@ export type Database = {
           whatsapp_url: string | null
         }
         Insert: {
+          announcement_active?: boolean
+          announcement_text?: string | null
           email?: string | null
           footer_tagline?: string | null
           id?: string
@@ -258,6 +283,8 @@ export type Database = {
           whatsapp_url?: string | null
         }
         Update: {
+          announcement_active?: boolean
+          announcement_text?: string | null
           email?: string | null
           footer_tagline?: string | null
           id?: string
@@ -333,6 +360,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_initial_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

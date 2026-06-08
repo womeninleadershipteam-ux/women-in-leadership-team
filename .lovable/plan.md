@@ -1,116 +1,78 @@
+## Two things I need you to decide first
 
+**1. "I don't want people logging in or creating an account" vs. an admin dashboard.**
+You still need to log in yourself to manage events, speakers, the announcement bar, and the newsletter. Public users won't see a login link anywhere — but you (the admin) need a way in. I'll:
 
-## Plan: Security hardening with RLS and user roles
+- Remove all login/signup CTAs from the public site (nav, footer, anywhere).
+- Keep the `/auth` route working but hidden — you reach it by typing the URL.
+- Disable public sign-ups entirely (only your bootstrapped admin account exists; no one can self-register).
 
-### Current state
-- RLS is enabled on all 4 tables (good)
-- All policies are wide-open: `for all to authenticated using (true) with check (true)`
-- No user_roles table exists
-- No role-checking functions exist
-- AI chat edge function uses service_role_key (bypasses RLS — no changes needed there)
+Tell me if you want this, or if you'd rather I rip out auth completely (in which case I cannot give you an admin dashboard — content would only change via my edits).
 
-### What this changes
+**2. "Configure this website for Vercel."**
+This template is built on TanStack Start targeting Cloudflare Workers (Lovable's hosting). Vercel is a different host with a different runtime. Switching means:
 
-**1. Database migration — new tables and functions**
+- Rewriting the Vite/Nitro deployment preset.
+- The Lovable preview here will still work, but **Lovable's own publish flow will no longer be the path to production** — you'd deploy by pushing to GitHub and connecting Vercel.
+- Lovable Cloud (your database/auth/emails) stays where it is — Vercel just hosts the frontend + server functions.
 
-Create `app_role` enum, `user_roles` table, and `has_role` security definer function:
+Tell me whether you actually want Vercel, or whether you meant "make it deployable without errors" (in which case I'll keep the current Lovable hosting, which is already Vercel-class and one click to publish).
 
-```sql
--- Role enum
-CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
+---
 
--- Roles table (NOT on profiles)
-CREATE TABLE public.user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role app_role NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE (user_id, role)
-);
+## What I'll build (assuming "yes" to hidden admin + actually wanting Vercel)
 
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+### Phase 1 — Database & backend
+- Add `newsletter_subscribers` table (email, created_at) + public insert policy.
+- Add `announcement` columns to `site_settings`: `announcement_text`, `announcement_active` (bool).
+- Bootstrap admin role for `womeninleadershipteam@gmail.com` (creates a placeholder auth user if it doesn't exist yet, then grants admin).
+- Disable Supabase Auth public sign-ups (admin-create-user only).
+- Set up Lovable Cloud email infrastructure + scaffold a transactional "new contact message" template that fires to `womeninleadershipteam@gmail.com` on form submit.
 
--- Users can only read their own roles
-CREATE POLICY "Users can view own roles"
-  ON public.user_roles FOR SELECT
-  TO authenticated
-  USING (auth.uid() = user_id);
+### Phase 2 — Branding & layout
+- Drop `logo.svg` into the project as an asset; replace text logo in `SiteNav` and `SiteFooter`.
+- Add boxicons via CDN in `__root.tsx` and swap lucide-react icons → boxicons across nav, footer, cards, hero badges.
+- Change hero kicker "A community-led movement" → "W/ Maranatha Ovbiagele".
+- Footer copy → `Copyright (c) {currentYear}, Women in Leadership.` with `{currentYear}` dynamic.
+- Replace "Admin" footer link with "Made by TDG" → `https://wa.me/+2349065718162?text=...` (pre-filled message).
+- Remove any visible auth links from nav/footer.
 
--- Security definer function (avoids RLS recursion)
-CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
-RETURNS BOOLEAN
-LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$;
-```
+### Phase 3 — New features
+- **Announcement bar** (`<AnnouncementBar>` in `SiteLayout`): pulls from `site_settings.announcement_text`; renders only when `announcement_active`; dismissible via `x` (state stored in localStorage by text hash, so a new announcement reappears); auto-marquee scroll when text exceeds ~80 chars.
+- **Event detail pages** at `/events/$eventId.tsx`: 1:1 flyer, full description, date/location, speakers list, prominent custom "Register" button linking to `registration_url`. Cards on `/events` link here. SEO `head()` per event.
+- **Flyer aspect ratio**: change `/events` card image from `16/10` → `1:1`.
+- **Newsletter signup** component (email + submit) on `/` and `/events` writing to `newsletter_subscribers`.
+- **About / Vision / Core Pillars** content from your flyer images, woven into the home page (About Us, Mission, Vision blocks) and the existing `/community` page (Target Audience + 4 Core Leadership Pillars).
+- **Past event flyers** gallery section on home that appears once `events` with `status='past'` and `image_url` exist (1:1 thumbnails linking to detail pages).
 
-**2. Database migration — replace existing RLS policies**
+### Phase 4 — Admin dashboard updates
+- Add UI for managing: the announcement bar text + toggle, newsletter subscribers (read-only list + CSV export), and editing event flyer URLs (1:1).
 
-Drop the 4 catch-all policies and replace with granular per-operation policies:
+### Phase 5 — Routing & cleanup
+- Audit every route file, ensure `errorComponent` + `notFoundComponent`, add a root catch-all `$.tsx` for 404s.
+- Per-route SEO `head()` (title + description + og tags) on every page.
+- Remove the orphaned `reset-password.tsx` route if it was tied to public signup.
+- Delete the now-unused `useAuth`/`use-is-admin` surface from public components (keep them only in `/admin` and `/auth`).
 
-For **asset_categories**, **employees**, **assets**, **asset_assignments**:
-- `SELECT` — all authenticated users (internal staff all need read access)
-- `INSERT` — all authenticated users (staff create assets/employees)
-- `UPDATE` — all authenticated users OR restrict to admins (for categories/sensitive ops)
-- `DELETE` — admin only via `has_role(auth.uid(), 'admin')`
+### Phase 6 — Vercel (only if you confirm)
+- Switch the Nitro preset to `vercel-edge` (or `vercel` node, depending on your preference — edge is faster but stricter).
+- Add `vercel.json` if needed for rewrites; ensure SPA-style routing works for deep links.
+- Move all `process.env.*` reads into server-function handlers (already done in the template), confirm no Cloudflare-only APIs are referenced.
+- Add a `.env.example` listing the required vars (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+- Verify build passes locally.
 
-Specific policies:
+---
 
-| Table | SELECT | INSERT | UPDATE | DELETE |
-|---|---|---|---|---|
-| asset_categories | authenticated | authenticated | authenticated | admin only |
-| employees | authenticated | authenticated | authenticated | admin only |
-| assets | authenticated | authenticated (with `created_by = auth.uid()` check) | authenticated | admin only |
-| asset_assignments | authenticated | authenticated | authenticated | admin only |
+## Technical notes
+- Admin bootstrap SQL: looks up `auth.users` for the email; if found, inserts `('<uid>', 'admin')` into `user_roles`. If not, inserts an `auth.users` row via Supabase admin SQL with a temporary password reset link you'll use once.
+- Announcement marquee uses a pure CSS `@keyframes` animation on overflow — no JS scroll library needed.
+- Logo: imported as a real SVG (`?react` import) so it inherits text color where needed.
+- Newsletter is single-table; if you want double opt-in or sending, that's a follow-up.
 
-The `assets` INSERT policy adds `WITH CHECK (created_by = auth.uid())` to ensure users can't spoof the creator.
+---
 
-**3. Auto-assign 'user' role on signup**
+**Reply with:**
+1. Hidden admin login: yes / rip out auth entirely
+2. Vercel: yes (I'll do the migration) / no (keep Lovable hosting and just make sure publish is clean)
 
-Create a trigger function that assigns the default `'user'` role when a new user signs up:
-
-```sql
-CREATE OR REPLACE FUNCTION public.handle_new_user_role()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'user');
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_auth_user_created_role
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_role();
-```
-
-**4. Seed existing users with roles**
-
-Use the insert tool to give all existing users the `'user'` role, and optionally promote one to `'admin'`.
-
-**5. Add role-check hook (`src/lib/hooks.ts`)**
-
-Add a `useUserRole` query hook so the UI can check the current user's role for conditional rendering (e.g., hide delete buttons for non-admins). This is for UX only — the real enforcement is RLS.
-
-**6. No changes to AI chat**
-
-The edge function uses `SUPABASE_SERVICE_ROLE_KEY` which bypasses RLS entirely. No modifications needed.
-
-### Files changed
-
-| File | Action |
-|---|---|
-| Migration SQL | Create — roles table, has_role function, replace RLS policies, trigger |
-| `src/lib/hooks.ts` | Edit — add `useUserRole` hook |
-
-### What stays the same
-- All existing CRUD operations continue working for authenticated users
-- AI chat edge function untouched
-- No component changes needed (delete restrictions will surface as toast errors from RLS denials)
-
+Once you answer those two, I'll execute the whole plan in one go.
