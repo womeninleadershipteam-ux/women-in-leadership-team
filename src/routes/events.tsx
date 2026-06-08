@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, MapPin, ArrowUpRight } from 'lucide-react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
+import { NewsletterSignup } from '@/components/newsletter-signup';
 
 export const Route = createFileRoute('/events')({
   component: EventsPage,
@@ -38,8 +38,12 @@ function EventCard({ ev }: { ev: any }) {
     year: 'numeric',
   });
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-brand-purple/40 hover:shadow-lg">
-      <div className="aspect-[16/10] overflow-hidden bg-brand-sand">
+    <Link
+      to="/events/$eventId"
+      params={{ eventId: ev.id }}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-brand-purple/40 hover:shadow-lg"
+    >
+      <div className="aspect-square overflow-hidden bg-brand-sand">
         {ev.image_url ? (
           <img
             src={ev.image_url}
@@ -60,11 +64,11 @@ function EventCard({ ev }: { ev: any }) {
         <h3 className="mt-3 font-display text-2xl text-brand-ink">{ev.title}</h3>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-ink/60">
           <span className="inline-flex items-center gap-1.5">
-            <Calendar size={14} /> {dateStr}
+            <i className="bx bx-calendar text-base" /> {dateStr}
           </span>
           {ev.location && (
             <span className="inline-flex items-center gap-1.5">
-              <MapPin size={14} /> {ev.location}
+              <i className="bx bx-map text-base" /> {ev.location}
             </span>
           )}
         </div>
@@ -79,28 +83,12 @@ function EventCard({ ev }: { ev: any }) {
           </p>
         )}
         <div className="mt-auto pt-6">
-          {ev.registration_url && ev.status !== 'past' ? (
-            <a
-              href={ev.registration_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-            >
-              Register <ArrowUpRight size={14} />
-            </a>
-          ) : ev.registration_url ? (
-            <a
-              href={ev.registration_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-brand-purple hover:underline"
-            >
-              Event recap <ArrowUpRight size={14} />
-            </a>
-          ) : null}
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-purple">
+            View details <i className="bx bx-right-arrow-alt text-lg" />
+          </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -153,6 +141,21 @@ function EventsPage() {
           )}
         </>
       )}
+
+      {/* Newsletter */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="rounded-3xl border border-border/60 bg-card p-10 md:p-14">
+          <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">
+            Never miss the next one
+          </p>
+          <h2 className="mt-3 font-display text-2xl text-brand-ink md:text-3xl">
+            Be first to hear about new events.
+          </h2>
+          <div className="mt-6">
+            <NewsletterSignup source="events" />
+          </div>
+        </div>
+      </section>
     </SiteLayout>
   );
 }

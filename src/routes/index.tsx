@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Calendar, Sparkles } from 'lucide-react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/lib/use-site-settings';
+import { NewsletterSignup } from '@/components/newsletter-signup';
 import heroImg from '@/assets/hero.jpg';
 
 export const Route = createFileRoute('/')({
@@ -51,10 +51,27 @@ function useFeaturedSpeakers() {
   });
 }
 
+function usePastFlyers() {
+  return useQuery({
+    queryKey: ['events', 'past-flyers'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('id, title, image_url, event_date')
+        .eq('status', 'past')
+        .not('image_url', 'is', null)
+        .order('event_date', { ascending: false })
+        .limit(6);
+      return data ?? [];
+    },
+  });
+}
+
 function HomePage() {
   const { data: settings } = useSiteSettings();
   const { data: upcoming } = useUpcomingEvent();
   const { data: speakers } = useFeaturedSpeakers();
+  const { data: pastFlyers } = usePastFlyers();
 
   return (
     <SiteLayout>
@@ -63,7 +80,7 @@ function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-6 pt-16 pb-24 md:grid-cols-2 md:gap-16 md:pt-24 md:pb-32">
           <div className="flex flex-col justify-center wil-rise">
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-purple/30 bg-brand-purple/5 px-4 py-1.5 text-xs uppercase tracking-widest text-brand-purple">
-              <Sparkles size={12} /> A community-led movement
+              <i className="bx bxs-crown text-sm" /> W/ Maranatha Ovbiagele
             </span>
             <h1 className="mt-6 font-display text-5xl leading-[1.05] text-brand-ink md:text-7xl">
               Lead with{' '}
@@ -80,7 +97,7 @@ function HomePage() {
                 className="group inline-flex items-center gap-2 rounded-full bg-brand-purple px-6 py-3 text-sm font-medium text-white transition-all hover:gap-3 hover:opacity-90"
               >
                 See upcoming events
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                <i className="bx bx-right-arrow-alt text-lg transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 to="/community"
@@ -119,7 +136,7 @@ function HomePage() {
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-brand-purple">
-                <Calendar size={14} /> Next event
+                <i className="bx bx-calendar-event text-base" /> Next event
               </p>
               <h2 className="mt-3 font-display text-3xl text-brand-ink md:text-4xl">
                 {upcoming.title}
@@ -134,36 +151,116 @@ function HomePage() {
                 {upcoming.location ? ` · ${upcoming.location}` : ''}
               </p>
             </div>
-            {upcoming.registration_url ? (
-              <a
-                href={upcoming.registration_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
-              >
-                Register now <ArrowRight size={16} />
-              </a>
-            ) : (
-              <Link
-                to="/events"
-                className="inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
-              >
-                Learn more <ArrowRight size={16} />
-              </Link>
-            )}
+            <Link
+              to="/events/$eventId"
+              params={{ eventId: upcoming.id }}
+              className="inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            >
+              View event <i className="bx bx-right-arrow-alt text-lg" />
+            </Link>
           </div>
         </section>
       )}
 
-      {/* Mission */}
-      <section className="mx-auto max-w-4xl px-6 py-24 text-center">
-        <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Our mission</p>
-        <p className="mt-6 font-serif text-3xl leading-relaxed text-brand-ink md:text-4xl">
-          We're building rooms where ambition feels at home — where women across industries
-          share what they've learned, ask what they don't know, and leave with people in
-          their corner.
-        </p>
+      {/* About / Mission / Vision */}
+      <section className="mx-auto max-w-6xl px-6 py-24">
+        <div className="grid gap-12 md:grid-cols-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">About us</p>
+            <p className="mt-4 text-base leading-relaxed text-brand-ink/80">
+              Women in Leadership is a transformational platform designed to equip,
+              inspire, and empower young women, emerging leaders, professionals,
+              entrepreneurs, and purpose-driven women to lead with confidence, influence,
+              character, and impact — beyond titles or recognition.
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Our mission</p>
+            <p className="mt-4 font-serif text-xl leading-relaxed text-brand-ink">
+              To equip and empower women with the mindset, confidence, leadership capacity,
+              and emotional intelligence needed to lead effectively and create lasting
+              impact.
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Our vision</p>
+            <p className="mt-4 font-serif text-xl leading-relaxed text-brand-ink">
+              To raise purpose-driven women who lead with clarity, influence, excellence,
+              and impact in their generation.
+            </p>
+          </div>
+        </div>
       </section>
+
+      {/* Core leadership pillars */}
+      <section className="border-y border-border/40 bg-brand-sand/40 py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">
+            Core leadership pillars
+          </p>
+          <h2 className="mt-3 font-display text-3xl text-brand-ink md:text-4xl">
+            What we build, in <span className="font-serif italic">every</span> session.
+          </h2>
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: 'bx-heart', t: 'Emotional intelligence', d: 'Lead yourself before you lead a room.' },
+              { icon: 'bx-trending-up', t: 'Capacity building', d: 'Skills and structures that scale with you.' },
+              { icon: 'bx-broadcast', t: 'Influence & impact', d: 'Move the needle in the spaces you already occupy.' },
+              { icon: 'bx-buildings', t: 'Legacy & nation building', d: 'Lead today in a way tomorrow will thank you for.' },
+            ].map((p) => (
+              <div key={p.t} className="rounded-2xl border border-border/50 bg-card p-6">
+                <i className={`bx ${p.icon} text-2xl text-brand-purple`} />
+                <h3 className="mt-3 font-display text-lg text-brand-ink">{p.t}</h3>
+                <p className="mt-1 text-sm text-brand-ink/70">{p.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Past event flyers */}
+      {pastFlyers && pastFlyers.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 py-24">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">
+                Past events
+              </p>
+              <h2 className="mt-3 font-display text-3xl text-brand-ink md:text-4xl">
+                The rooms we've built.
+              </h2>
+            </div>
+            <Link to="/events" className="hidden text-sm text-brand-purple hover:underline md:inline">
+              All events →
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+            {pastFlyers.map((f) => (
+              <Link
+                key={f.id}
+                to="/events/$eventId"
+                params={{ eventId: f.id }}
+                className="group block overflow-hidden rounded-2xl border border-border/50 bg-card"
+              >
+                <div className="aspect-square overflow-hidden bg-brand-sand">
+                  <img
+                    src={f.image_url!}
+                    alt={f.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <p className="font-display text-base text-brand-ink">{f.title}</p>
+                  <p className="mt-1 text-xs text-brand-ink/55">
+                    {new Date(f.event_date).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured speakers */}
       {speakers && speakers.length > 0 && (
@@ -205,6 +302,23 @@ function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Newsletter */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="rounded-3xl border border-brand-purple/20 bg-brand-purple p-10 text-white md:p-16">
+          <p className="text-xs uppercase tracking-[0.25em] text-white/70">Stay in the loop</p>
+          <h2 className="mt-3 font-display text-3xl md:text-4xl">
+            Get event invites & updates.
+          </h2>
+          <p className="mt-3 max-w-xl text-white/80">
+            One email when something matters — new event drops, speaker reveals, and
+            community moments. No spam, ever.
+          </p>
+          <div className="mt-8">
+            <NewsletterSignup source="home" variant="dark" />
+          </div>
+        </div>
+      </section>
     </SiteLayout>
   );
 }
