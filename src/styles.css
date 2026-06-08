@@ -188,3 +188,14 @@
 .wil-rise-delay-1 { animation-delay: 0.1s; }
 .wil-rise-delay-2 { animation-delay: 0.2s; }
 .wil-rise-delay-3 { animation-delay: 0.3s; }
+
+/* Announcement bar marquee */
+@keyframes wil-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.wil-marquee {
+  display: inline-flex;
+  animation: wil-marquee 28s linear infinite;
+  white-space: nowrap;
+}
