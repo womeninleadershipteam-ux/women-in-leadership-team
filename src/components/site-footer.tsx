@@ -1,17 +1,21 @@
-import { Link } from '@tanstack/react-router';
-import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import { useSiteSettings } from '@/lib/use-site-settings';
+import { WilLogo } from './wil-logo';
+
+const TDG_WHATSAPP =
+  'https://wa.me/2349065718162?text=' +
+  encodeURIComponent(
+    "Hi TDG, I saw your work on the Women in Leadership website and I'd like to talk about a project.",
+  );
 
 export function SiteFooter() {
   const { data: settings } = useSiteSettings();
+  const year = new Date().getFullYear();
   return (
     <footer className="mt-32 border-t border-border/40 bg-brand-sand/40">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-12 md:grid-cols-3">
           <div className="md:col-span-2">
-            <p className="font-display text-2xl text-brand-ink md:text-3xl">
-              Women in Leadership
-            </p>
+            <WilLogo className="h-12 w-auto md:h-14" />
             <p className="mt-3 max-w-md font-serif text-lg italic text-brand-ink/70">
               {settings?.footer_tagline ??
                 'A community for women who lead — and women becoming leaders.'}
@@ -30,7 +34,7 @@ export function SiteFooter() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 text-brand-ink/80 transition-colors hover:text-brand-purple"
                   >
-                    <MessageCircle size={16} /> WhatsApp community
+                    <i className="bx bxl-whatsapp text-base" /> WhatsApp community
                   </a>
                 </li>
               )}
@@ -42,7 +46,7 @@ export function SiteFooter() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 text-brand-ink/80 transition-colors hover:text-brand-purple"
                   >
-                    <Instagram size={16} /> Instagram
+                    <i className="bx bxl-instagram text-base" /> Instagram
                   </a>
                 </li>
               )}
@@ -52,7 +56,7 @@ export function SiteFooter() {
                     href={`mailto:${settings.email}`}
                     className="inline-flex items-center gap-2 text-brand-ink/80 transition-colors hover:text-brand-purple"
                   >
-                    <Mail size={16} /> {settings.email}
+                    <i className="bx bx-envelope text-base" /> {settings.email}
                   </a>
                 </li>
               )}
@@ -61,10 +65,18 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-border/40 pt-6 text-xs text-brand-ink/50 md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} Women in Leadership. Made with care.</p>
-          <Link to="/auth" className="hover:text-brand-purple">
-            Admin
-          </Link>
+          <p>Copyright (c) {year}, Women in Leadership.</p>
+          <a
+            href={TDG_WHATSAPP}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-brand-purple"
+          >
+            Made by{' '}
+            <span className="font-medium text-brand-ink/70 underline-offset-2 hover:underline">
+              TDG
+            </span>
+          </a>
         </div>
       </div>
     </footer>
