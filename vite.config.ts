@@ -194,7 +194,7 @@ export default defineConfig(({ command, mode }) => {
       devClientErrorLogger(),
       devServerFnErrorLogger(),
       ...(useCloudflare ? [cloudflare({ viteEnvironment: { name: "ssr" } })] : []),
-      tanstackStart(isVercel ? { target: "vercel" as const } : {}),
+      tanstackStart(),
       viteReact(),
       mode === "development" && componentTagger(),
     ].filter(Boolean),
