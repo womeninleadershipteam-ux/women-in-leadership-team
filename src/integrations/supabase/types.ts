@@ -145,6 +145,30 @@ export type Database = {
           },
         ]
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string
@@ -166,6 +190,120 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          event_date: string
+          id: string
+          image_url: string | null
+          location: string | null
+          registration_url: string | null
+          speakers: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          event_date: string
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          registration_url?: string | null
+          speakers?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          event_date?: string
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          registration_url?: string | null
+          speakers?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          email: string | null
+          footer_tagline: string | null
+          id: string
+          instagram_url: string | null
+          mission_statement: string | null
+          updated_at: string
+          whatsapp_url: string | null
+        }
+        Insert: {
+          email?: string | null
+          footer_tagline?: string | null
+          id?: string
+          instagram_url?: string | null
+          mission_statement?: string | null
+          updated_at?: string
+          whatsapp_url?: string | null
+        }
+        Update: {
+          email?: string | null
+          footer_tagline?: string | null
+          id?: string
+          instagram_url?: string | null
+          mission_statement?: string | null
+          updated_at?: string
+          whatsapp_url?: string | null
+        }
+        Relationships: []
+      }
+      speakers: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_order: number
+          featured: boolean
+          id: string
+          name: string
+          photo_url: string | null
+          social_url: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          name: string
+          photo_url?: string | null
+          social_url?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          name?: string
+          photo_url?: string | null
+          social_url?: string | null
+          title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
