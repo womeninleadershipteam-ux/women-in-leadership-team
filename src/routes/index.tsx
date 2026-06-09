@@ -80,7 +80,7 @@ function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-6 pt-16 pb-24 md:grid-cols-2 md:gap-16 md:pt-24 md:pb-32">
           <div className="flex flex-col justify-center wil-rise">
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-purple/30 bg-brand-purple/5 px-4 py-1.5 text-xs uppercase tracking-widest text-brand-purple">
-              <i className="bx bxs-crown text-sm" /> W/ Maranatha Ovbiagele
+              <i className="bx bxs-crown text-sm" /> W/ MARANTHA OVBIAGELE
             </span>
             <h1 className="mt-6 font-display text-5xl leading-[1.05] text-brand-ink md:text-7xl">
               Lead with{' '}
