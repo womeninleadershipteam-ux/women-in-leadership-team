@@ -38,7 +38,7 @@ function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'events' | 'speakers' | 'settings'>('events');
+  const [tab, setTab] = useState<'events' | 'speakers' | 'announcement' | 'subscribers' | 'messages' | 'settings'>('events');
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: '/auth' });
@@ -91,8 +91,8 @@ function AdminPage() {
           </button>
         </div>
 
-        <div className="mt-10 flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-          {(['events', 'speakers', 'settings'] as const).map((t) => (
+        <div className="mt-10 flex flex-wrap gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['events', 'speakers', 'announcement', 'subscribers', 'messages', 'settings'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -110,6 +110,9 @@ function AdminPage() {
         <div className="mt-10">
           {tab === 'events' && <EventsAdmin />}
           {tab === 'speakers' && <SpeakersAdmin />}
+          {tab === 'announcement' && <AnnouncementAdmin />}
+          {tab === 'subscribers' && <SubscribersAdmin />}
+          {tab === 'messages' && <MessagesAdmin />}
           {tab === 'settings' && <SettingsAdmin />}
         </div>
 
@@ -471,5 +474,178 @@ function Field({ label, full, children }: { label: string; full?: boolean; child
       <span className="text-xs uppercase tracking-widest text-brand-ink/60">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+/* ----------------- ANNOUNCEMENT BAR ----------------- */
+
+function AnnouncementAdmin() {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ['admin', 'announcement'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('site_settings')
+        .select('id, announcement_text, announcement_active')
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+  const [form, setForm] = useState<any>(null);
+  useEffect(() => { if (data && !form) setForm(data); }, [data, form]);
+  if (!form) return <p className="text-brand-ink/50">Loading…</p>;
+
+  const save = async () => {
+    const { error } = await supabase
+      .from('site_settings')
+      .update({
+        announcement_text: form.announcement_text,
+        announcement_active: form.announcement_active,
+      })
+      .eq('id', form.id);
+    if (error) return toast.error(error.message);
+    toast.success('Announcement updated');
+    qc.invalidateQueries({ queryKey: ['site_settings'] });
+    qc.invalidateQueries({ queryKey: ['admin', 'announcement'] });
+  };
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="font-display text-2xl">Announcement bar</h2>
+      <p className="mt-1 text-sm text-brand-ink/60">
+        A purple bar at the top of every page. Long text auto-scrolls.
+      </p>
+      <div className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6">
+        <Field label="Message">
+          <textarea
+            rows={3}
+            className={inputCls}
+            value={form.announcement_text ?? ''}
+            onChange={(e) => setForm({ ...form, announcement_text: e.target.value })}
+          />
+        </Field>
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!form.announcement_active}
+            onChange={(e) => setForm({ ...form, announcement_active: e.target.checked })}
+          />
+          Show announcement bar on the site
+        </label>
+        <div>
+          <button onClick={save} className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2 text-sm text-white hover:opacity-90">
+            <Save size={14} /> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------- NEWSLETTER SUBSCRIBERS ----------------- */
+
+function SubscribersAdmin() {
+  const { data } = useQuery({
+    queryKey: ['admin', 'subscribers'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('newsletter_subscribers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const exportCsv = () => {
+    const rows = data ?? [];
+    const header = 'email,created_at\n';
+    const body = rows.map((r: any) => `${r.email},${r.created_at}`).join('\n');
+    const blob = new Blob([header + body], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wil-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl">Newsletter subscribers</h2>
+          <p className="mt-1 text-sm text-brand-ink/60">{data?.length ?? 0} total</p>
+        </div>
+        <button
+          onClick={exportCsv}
+          disabled={!data?.length}
+          className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2 text-sm hover:border-brand-purple disabled:opacity-50"
+        >
+          Download CSV
+        </button>
+      </div>
+      <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-card">
+        {(data ?? []).map((s: any) => (
+          <div key={s.id} className="flex items-center justify-between gap-4 p-4">
+            <p className="truncate text-sm text-brand-ink">{s.email}</p>
+            <p className="text-xs text-brand-ink/50">{new Date(s.created_at).toLocaleDateString()}</p>
+          </div>
+        ))}
+        {data && data.length === 0 && (
+          <p className="p-6 text-center text-sm text-brand-ink/50">No subscribers yet.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------- CONTACT MESSAGES ----------------- */
+
+function MessagesAdmin() {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ['admin', 'messages'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const remove = async (id: string) => {
+    if (!confirm('Delete this message?')) return;
+    const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ['admin', 'messages'] });
+  };
+
+  return (
+    <div>
+      <h2 className="font-display text-2xl">Contact messages</h2>
+      <p className="mt-1 text-sm text-brand-ink/60">{data?.length ?? 0} total</p>
+      <div className="mt-6 space-y-3">
+        {(data ?? []).map((m: any) => (
+          <div key={m.id} className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-medium text-brand-ink">{m.name}</p>
+                <a href={`mailto:${m.email}`} className="text-sm text-brand-purple hover:underline">{m.email}</a>
+                <p className="mt-1 text-xs text-brand-ink/50">{new Date(m.created_at).toLocaleString()}</p>
+              </div>
+              <button onClick={() => remove(m.id)} className="rounded-full border border-border p-2 text-destructive hover:border-destructive">
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <p className="mt-3 whitespace-pre-wrap text-sm text-brand-ink/80">{m.message}</p>
+          </div>
+        ))}
+        {data && data.length === 0 && (
+          <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-brand-ink/50">No messages yet.</p>
+        )}
+      </div>
+    </div>
   );
 }
