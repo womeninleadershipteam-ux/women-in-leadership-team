@@ -55,6 +55,19 @@ function EventDetailPage() {
     },
   });
 
+  const { data: related } = useQuery({
+    queryKey: ['events', 'related', eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('id,title,event_date,image_url,status,location')
+        .neq('id', eventId)
+        .order('event_date', { ascending: false })
+        .limit(6);
+      return data ?? [];
+    },
+  });
+
   if (isLoading) {
     return (
       <SiteLayout>
@@ -75,6 +88,10 @@ function EventDetailPage() {
   const timeStr = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const speakers = (ev.speakers ?? '').split(',').map((s) => s.trim()).filter(Boolean);
   const isPast = ev.status === 'past';
+  const theme = (ev as any).theme as string | null | undefined;
+  const topic = (ev as any).topic as string | null | undefined;
+  const upcomingRelated = (related ?? []).filter((r) => r.status === 'upcoming');
+  const pastRelated = (related ?? []).filter((r) => r.status === 'past');
 
   return (
     <SiteLayout>
@@ -108,10 +125,14 @@ function EventDetailPage() {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">
               {isPast ? 'Past event' : 'Upcoming event'}
+              {theme ? <span className="ml-2 text-brand-ink/40">— {theme}</span> : null}
             </p>
             <h1 className="mt-3 font-display text-4xl leading-tight text-brand-ink md:text-5xl">
               {ev.title}
             </h1>
+            {topic && (
+              <p className="mt-3 font-serif text-xl italic text-brand-ink/70">{topic}</p>
+            )}
 
             <dl className="mt-6 grid gap-4 text-sm">
               <div className="flex items-start gap-3">
@@ -192,6 +213,84 @@ function EventDetailPage() {
           </div>
         </div>
       </article>
+
+      {(upcomingRelated.length > 0 || pastRelated.length > 0) && (
+        <section className="border-t border-border/40 bg-brand-sand/30">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <div className="flex items-end justify-between">
+              <h2 className="font-display text-2xl text-brand-ink md:text-3xl">More events</h2>
+              <Link to="/events" className="text-sm text-brand-purple hover:underline">
+                View all <i className="bx bx-right-arrow-alt align-middle" />
+              </Link>
+            </div>
+
+            {upcomingRelated.length > 0 && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Upcoming</p>
+                <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {upcomingRelated.map((r) => (
+                    <RelatedCard key={r.id} ev={r} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pastRelated.length > 0 && (
+              <div className="mt-10">
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-ink/50">Past</p>
+                <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {pastRelated.map((r) => (
+                    <RelatedCard key={r.id} ev={r} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </SiteLayout>
+  );
+}
+
+function RelatedCard({ ev }: { ev: any }) {
+  const date = new Date(ev.event_date).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return (
+    <Link
+      to="/events/$eventId"
+      params={{ eventId: ev.id }}
+      className="group flex gap-4 rounded-xl border border-border/50 bg-card p-3 transition-all hover:border-brand-purple/40 hover:shadow-md"
+    >
+      <div className="aspect-square h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-brand-sand">
+        {ev.image_url ? (
+          <img
+            src={ev.image_url}
+            alt={ev.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center font-display text-xl text-brand-clay/40">
+            WIL
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="line-clamp-2 font-display text-base text-brand-ink group-hover:text-brand-purple">
+          {ev.title}
+        </h3>
+        <p className="mt-1 text-xs text-brand-ink/60">
+          <i className="bx bx-calendar align-middle" /> {date}
+        </p>
+        {ev.location && (
+          <p className="mt-0.5 truncate text-xs text-brand-ink/50">
+            <i className="bx bx-map align-middle" /> {ev.location}
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }

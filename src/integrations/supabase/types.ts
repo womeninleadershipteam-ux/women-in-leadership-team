@@ -205,7 +205,9 @@ export type Database = {
           registration_url: string | null
           speakers: string | null
           status: string
+          theme: string | null
           title: string
+          topic: string | null
           updated_at: string
         }
         Insert: {
@@ -219,7 +221,9 @@ export type Database = {
           registration_url?: string | null
           speakers?: string | null
           status?: string
+          theme?: string | null
           title: string
+          topic?: string | null
           updated_at?: string
         }
         Update: {
@@ -233,7 +237,9 @@ export type Database = {
           registration_url?: string | null
           speakers?: string | null
           status?: string
+          theme?: string | null
           title?: string
+          topic?: string | null
           updated_at?: string
         }
         Relationships: []
