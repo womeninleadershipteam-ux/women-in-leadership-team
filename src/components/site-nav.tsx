@@ -25,7 +25,7 @@ export function SiteNav() {
               key={l.to}
               to={l.to}
               className="text-sm text-brand-ink/70 transition-colors hover:text-brand-purple"
-              activeProps={{ className: 'text-brand-purple font-medium' }}
+              activeProps={{ className: 'text-brand-purple font-medium line-through decoration-brand-purple decoration-2' }}
               activeOptions={{ exact: l.to === '/' }}
             >
               {l.label}
@@ -51,7 +51,7 @@ export function SiteNav() {
                 to={l.to}
                 onClick={() => setOpen(false)}
                 className="rounded-md py-2 text-base text-brand-ink/80 hover:text-brand-purple"
-                activeProps={{ className: 'text-brand-purple font-medium' }}
+                activeProps={{ className: 'text-brand-purple font-medium line-through decoration-brand-purple decoration-2' }}
                 activeOptions={{ exact: l.to === '/' }}
               >
                 {l.label}
