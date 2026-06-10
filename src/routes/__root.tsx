@@ -32,14 +32,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Women in Leadership — A community for women who lead" },
+      { title: "Women in Leadership, Nigeria." },
       {
         name: "description",
         content:
           "Women in Leadership is a community that hosts events, fosters mentorship, and empowers women to lead across industries.",
       },
-      { property: "og:title", content: "Women in Leadership" },
-      { name: "twitter:title", content: "Women in Leadership" },
+      { property: "og:title", content: "Women in Leadership, Nigeria." },
+      { name: "twitter:title", content: "Women in Leadership, Nigeria." },
       {
         property: "og:description",
         content: "Events, mentorship, and honest conversations for women becoming leaders.",
@@ -50,6 +50,11 @@ export const Route = createRootRoute({
       },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { name: "description", content: "A community for women who lead." },
+      { property: "og:description", content: "A community for women who lead." },
+      { name: "twitter:description", content: "A community for women who lead." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cfc04705-5496-4195-9f66-4f3cb9d20f3c" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cfc04705-5496-4195-9f66-4f3cb9d20f3c" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
