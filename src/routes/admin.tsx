@@ -21,6 +21,8 @@ type EventRow = {
   image_url: string | null;
   speakers: string | null;
   registration_url: string | null;
+  theme: string | null;
+  topic: string | null;
   status: 'upcoming' | 'past';
 };
 
@@ -134,6 +136,8 @@ const emptyEvent: EventRow = {
   image_url: '',
   speakers: '',
   registration_url: '',
+  theme: '',
+  topic: '',
   status: 'upcoming',
 };
 
@@ -264,6 +268,12 @@ function EventEditor({
         </Field>
         <Field label="Registration URL">
           <input className={inputCls} value={r.registration_url ?? ''} onChange={(e) => u('registration_url', e.target.value)} />
+        </Field>
+        <Field label="Theme">
+          <input className={inputCls} value={r.theme ?? ''} onChange={(e) => u('theme', e.target.value)} />
+        </Field>
+        <Field label="Topic">
+          <input className={inputCls} value={r.topic ?? ''} onChange={(e) => u('topic', e.target.value)} />
         </Field>
         <Field label="Speakers (comma separated)" full>
           <input className={inputCls} value={r.speakers ?? ''} onChange={(e) => u('speakers', e.target.value)} />
