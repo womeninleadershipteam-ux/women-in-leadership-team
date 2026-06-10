@@ -1,5 +1,12 @@
 {
   "buildCommand": "bun run build",
   "framework": null,
-  "installCommand": "bun install"
+  "installCommand": "bun install",
+  "outputDirectory": "dist/client",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/_shell.html"
+    }
+  ]
 }
