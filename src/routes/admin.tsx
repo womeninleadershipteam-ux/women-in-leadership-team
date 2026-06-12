@@ -7,6 +7,9 @@ import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/use-auth';
 import { useIsAdmin } from '@/lib/use-is-admin';
+import { useDraft } from '@/lib/use-draft';
+import { ImageUploadField } from '@/components/image-upload-field';
+import { composeLocation, VIRTUAL_PLATFORMS, type LocationDetails } from '@/lib/event-location';
 
 export const Route = createFileRoute('/admin')({
   component: AdminPage,
@@ -18,6 +21,8 @@ type EventRow = {
   description: string | null;
   event_date: string;
   location: string | null;
+  location_type: string;
+  location_details: LocationDetails;
   image_url: string | null;
   speakers: string | null;
   registration_url: string | null;
@@ -26,24 +31,31 @@ type EventRow = {
   status: 'upcoming' | 'past';
 };
 
-type SpeakerRow = {
+type EventSpeaker = {
   id?: string;
   name: string;
   title: string | null;
-  bio: string | null;
   photo_url: string | null;
   social_url: string | null;
-  featured: boolean;
 };
 
 function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'events' | 'speakers' | 'announcement' | 'subscribers' | 'messages' | 'settings'>('events');
+  const [tab, setTab] = useState<'events' | 'announcement' | 'subscribers' | 'messages' | 'settings'>('events');
 
   useEffect(() => {
-    if (!authLoading && !user) navigate({ to: '/auth' });
+    // Double-check with the auth server before kicking the admin out — a
+    // transient null during token refresh (backgrounded tab) is not a sign-out.
+    if (authLoading || user) return;
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && !data.session) navigate({ to: '/auth' });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user, authLoading, navigate]);
 
   if (authLoading || roleLoading) {
@@ -78,12 +90,12 @@ function AdminPage() {
 
   return (
     <SiteLayout>
-      <section className="mx-auto max-w-6xl px-6 pt-12 pb-24">
+      <section className="mx-auto max-w-6xl px-4 pt-12 pb-24 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Admin</p>
             <h1 className="mt-2 font-display text-4xl text-brand-ink">Dashboard</h1>
-            <p className="mt-2 text-sm text-brand-ink/60">Signed in as {user.email}</p>
+            <p className="mt-2 break-all text-sm text-brand-ink/60">Signed in as {user.email}</p>
           </div>
           <button
             onClick={() => signOut().then(() => navigate({ to: '/' }))}
@@ -93,12 +105,12 @@ function AdminPage() {
           </button>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-1 rounded-full border border-border bg-card p-1 w-fit">
-          {(['events', 'speakers', 'announcement', 'subscribers', 'messages', 'settings'] as const).map((t) => (
+        <div className="mt-10 flex w-fit max-w-full flex-wrap gap-1 rounded-2xl border border-border bg-card p-1 sm:rounded-full">
+          {(['events', 'announcement', 'subscribers', 'messages', 'settings'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`rounded-full px-5 py-2 text-sm capitalize transition-colors ${
+              className={`rounded-full px-3 py-1.5 text-xs capitalize transition-colors sm:px-5 sm:py-2 sm:text-sm ${
                 tab === t
                   ? 'bg-brand-purple text-white'
                   : 'text-brand-ink/70 hover:text-brand-ink'
@@ -111,7 +123,6 @@ function AdminPage() {
 
         <div className="mt-10">
           {tab === 'events' && <EventsAdmin />}
-          {tab === 'speakers' && <SpeakersAdmin />}
           {tab === 'announcement' && <AnnouncementAdmin />}
           {tab === 'subscribers' && <SubscribersAdmin />}
           {tab === 'messages' && <MessagesAdmin />}
