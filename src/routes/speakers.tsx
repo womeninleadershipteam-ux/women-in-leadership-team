@@ -18,21 +18,33 @@ export const Route = createFileRoute('/speakers')({
   }),
 });
 
-function useSpeakers() {
+type EventSpeakerWithEvent = {
+  id: string;
+  name: string;
+  title: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  social_url: string | null;
+  events: { id: string; title: string; event_date: string; status: string } | null;
+};
+
+function useEventSpeakers() {
   return useQuery({
-    queryKey: ['speakers', 'all'],
+    queryKey: ['speakers', 'by-event'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('speakers')
-        .select('*')
+      const { data } = await (supabase as any)
+        .from('event_speakers')
+        .select('id, name, title, bio, photo_url, social_url, events(id, title, event_date, status)')
         .order('display_order', { ascending: true });
-      return data ?? [];
+      return (data ?? []) as EventSpeakerWithEvent[];
     },
   });
 }
 
 function SpeakersPage() {
-  const { data: speakers, isLoading } = useSpeakers();
+  const { data: speakers, isLoading } = useEventSpeakers();
+  const upcoming = (speakers ?? []).filter((s) => s.events?.status === 'upcoming');
+  const past = (speakers ?? []).filter((s) => s.events?.status === 'past');
   return (
     <SiteLayout>
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-16 md:pt-24">
@@ -50,40 +62,31 @@ function SpeakersPage() {
         {isLoading ? (
           <p className="text-brand-ink/50">Loading…</p>
         ) : speakers && speakers.length > 0 ? (
-          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {speakers.map((s) => (
-              <article key={s.id} className="group">
-                <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-sand">
-                  {s.photo_url ? (
-                    <img
-                      src={s.photo_url}
-                      alt={s.name}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center font-display text-5xl text-brand-clay/40">
-                      {s.name.charAt(0)}
-                    </div>
-                  )}
+          <div className="space-y-16">
+            {upcoming.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">
+                  Upcoming speakers
+                </p>
+                <div className="mt-8 grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+                  {upcoming.map((s) => (
+                    <SpeakerCard key={s.id} s={s} />
+                  ))}
                 </div>
-                <h3 className="mt-5 font-display text-2xl text-brand-ink">{s.name}</h3>
-                {s.title && <p className="text-sm text-brand-ink/60">{s.title}</p>}
-                {s.bio && (
-                  <p className="mt-3 text-sm leading-relaxed text-brand-ink/75">{s.bio}</p>
-                )}
-                {s.social_url && (
-                  <a
-                    href={s.social_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-purple hover:underline"
-                  >
-                    Connect <ExternalLink size={12} />
-                  </a>
-                )}
-              </article>
-            ))}
+              </div>
+            )}
+            {past.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-ink/50">
+                  Past speakers
+                </p>
+                <div className="mt-8 grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+                  {past.map((s) => (
+                    <SpeakerCard key={s.id} s={s} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="rounded-2xl border border-dashed border-border bg-brand-sand/30 p-8 text-center text-brand-ink/60">
@@ -92,5 +95,52 @@ function SpeakersPage() {
         )}
       </section>
     </SiteLayout>
+  );
+}
+
+function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
+  const eventDate = s.events
+    ? new Date(s.events.event_date).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null;
+  return (
+    <article className="group">
+      <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-sand">
+        {s.photo_url ? (
+          <img
+            src={s.photo_url}
+            alt={s.name}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center font-display text-5xl text-brand-clay/40">
+            {s.name.charAt(0)}
+          </div>
+        )}
+      </div>
+      <h3 className="mt-5 font-display text-2xl text-brand-ink">{s.name}</h3>
+      {s.title && <p className="text-sm text-brand-ink/60">{s.title}</p>}
+      {s.events && (
+        <p className="mt-2 text-xs uppercase tracking-widest text-brand-ink/50">
+          {s.events.title}
+          {eventDate ? ` · ${eventDate}` : ''}
+        </p>
+      )}
+      {s.bio && <p className="mt-3 text-sm leading-relaxed text-brand-ink/75">{s.bio}</p>}
+      {s.social_url && (
+        <a
+          href={s.social_url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-purple hover:underline"
+        >
+          Connect <ExternalLink size={12} />
+        </a>
+      )}
+    </article>
   );
 }

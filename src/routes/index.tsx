@@ -40,13 +40,12 @@ function useFeaturedSpeakers() {
   return useQuery({
     queryKey: ['speakers', 'featured'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('speakers')
-        .select('*')
-        .eq('featured', true)
-        .order('display_order', { ascending: true })
+      const { data } = await (supabase as any)
+        .from('event_speakers')
+        .select('id, name, title, photo_url, events!inner(event_date)')
+        .order('created_at', { ascending: false })
         .limit(4);
-      return data ?? [];
+      return (data ?? []) as { id: string; name: string; title: string | null; photo_url: string | null }[];
     },
   });
 }

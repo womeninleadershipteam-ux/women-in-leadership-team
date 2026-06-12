@@ -20,7 +20,20 @@ export function useAuth() {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // When the tab was backgrounded, browsers throttle timers and the token
+    // refresh can be delayed past expiry. Proactively re-validate the session
+    // as soon as the tab becomes visible again so the user stays signed in.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        supabase.auth.getSession();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
