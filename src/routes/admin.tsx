@@ -539,6 +539,7 @@ function SettingsAdmin() {
     },
   });
   const [form, setForm] = useState<any>(null);
+  const draft = useDraft('site-settings', form, setForm, !!form);
 
   useEffect(() => {
     if (data && !form) setForm(data);
@@ -558,7 +559,8 @@ function SettingsAdmin() {
       })
       .eq('id', form.id);
     if (error) return toast.error(error.message);
-    toast.success('Settings saved');
+    draft.clear();
+    toast.success('Settings saved — visible to all visitors');
     qc.invalidateQueries({ queryKey: ['site_settings'] });
     qc.invalidateQueries({ queryKey: ['admin', 'settings'] });
   };
@@ -566,6 +568,11 @@ function SettingsAdmin() {
   return (
     <div className="max-w-2xl">
       <h2 className="font-display text-2xl">Site settings</h2>
+      {draft.wasRestored && (
+        <p className="mt-3 rounded-lg bg-brand-sand/60 px-3 py-2 text-xs text-brand-ink/70">
+          Restored your unsaved draft. Save to publish it.
+        </p>
+      )}
       <div className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6">
         <Field label="WhatsApp community URL">
           <input className={inputCls} value={form.whatsapp_url ?? ''} onChange={(e) => setForm({ ...form, whatsapp_url: e.target.value })} />
