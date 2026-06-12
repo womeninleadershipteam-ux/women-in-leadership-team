@@ -193,6 +193,53 @@ export type Database = {
         }
         Relationships: []
       }
+      event_speakers: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_order: number
+          event_id: string
+          id: string
+          name: string
+          photo_url: string | null
+          social_url: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          event_id: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          social_url?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number
+          event_id?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          social_url?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_speakers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -202,6 +249,8 @@ export type Database = {
           id: string
           image_url: string | null
           location: string | null
+          location_details: Json
+          location_type: string
           registration_url: string | null
           speakers: string | null
           status: string
@@ -218,6 +267,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          location_details?: Json
+          location_type?: string
           registration_url?: string | null
           speakers?: string | null
           status?: string
@@ -234,6 +285,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          location_details?: Json
+          location_type?: string
           registration_url?: string | null
           speakers?: string | null
           status?: string
