@@ -21,9 +21,12 @@ export function useIsAdmin() {
       .eq('user_id', user.id)
       .eq('role', 'admin')
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!cancelled) {
-          setIsAdmin(!!data);
+          // Only update on a definitive answer. A transient error (e.g. an
+          // expired token mid-refresh after the tab was backgrounded) must
+          // not strip admin access from the UI.
+          if (!error) setIsAdmin(!!data);
           setLoading(false);
         }
       });
