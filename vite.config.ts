@@ -194,7 +194,19 @@ export default defineConfig(({ command, mode }) => {
       devClientErrorLogger(),
       devServerFnErrorLogger(),
       ...(useCloudflare ? [cloudflare({ viteEnvironment: { name: "ssr" } })] : []),
-      tanstackStart(),
+      tanstackStart(
+        isVercel
+          ? {
+              // Vercel has no server adapter for this stack — build a static
+              // SPA shell so every deep link is served client-side.
+              spa: {
+                enabled: true,
+                prerender: { outputPath: "/_shell", crawlLinks: false },
+              },
+              prerender: { autoSubfolderIndex: false },
+            }
+          : {},
+      ),
       viteReact(),
       mode === "development" && componentTagger(),
     ].filter(Boolean),
