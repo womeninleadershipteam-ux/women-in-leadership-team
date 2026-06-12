@@ -45,7 +45,7 @@ function useFeaturedSpeakers() {
         .select('id, name, title, photo_url, events!inner(event_date)')
         .order('created_at', { ascending: false })
         .limit(4);
-      return data ?? [];
+      return (data ?? []) as { id: string; name: string; title: string | null; photo_url: string | null }[];
     },
   });
 }
