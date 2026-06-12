@@ -627,6 +627,7 @@ function AnnouncementAdmin() {
     },
   });
   const [form, setForm] = useState<any>(null);
+  const draft = useDraft('announcement', form, setForm, !!form);
   useEffect(() => { if (data && !form) setForm(data); }, [data, form]);
   if (!form) return <p className="text-brand-ink/50">Loading…</p>;
 
@@ -639,7 +640,8 @@ function AnnouncementAdmin() {
       })
       .eq('id', form.id);
     if (error) return toast.error(error.message);
-    toast.success('Announcement updated');
+    draft.clear();
+    toast.success('Announcement updated — visible to all visitors');
     qc.invalidateQueries({ queryKey: ['site_settings'] });
     qc.invalidateQueries({ queryKey: ['admin', 'announcement'] });
   };
@@ -650,6 +652,11 @@ function AnnouncementAdmin() {
       <p className="mt-1 text-sm text-brand-ink/60">
         A purple bar at the top of every page. Long text auto-scrolls.
       </p>
+      {draft.wasRestored && (
+        <p className="mt-3 rounded-lg bg-brand-sand/60 px-3 py-2 text-xs text-brand-ink/70">
+          Restored your unsaved draft. Save to publish it.
+        </p>
+      )}
       <div className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6">
         <Field label="Message">
           <textarea
@@ -706,7 +713,7 @@ function SubscribersAdmin() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl">Newsletter subscribers</h2>
           <p className="mt-1 text-sm text-brand-ink/60">{data?.length ?? 0} total</p>
