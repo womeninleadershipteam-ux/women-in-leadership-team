@@ -68,6 +68,24 @@ function EventDetailPage() {
     },
   });
 
+  const { data: eventSpeakers } = useQuery({
+    queryKey: ['event-speakers', eventId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('event_speakers')
+        .select('id, name, title, photo_url, social_url')
+        .eq('event_id', eventId)
+        .order('display_order');
+      return (data ?? []) as {
+        id: string;
+        name: string;
+        title: string | null;
+        photo_url: string | null;
+        social_url: string | null;
+      }[];
+    },
+  });
+
   if (isLoading) {
     return (
       <SiteLayout>
@@ -86,7 +104,8 @@ function EventDetailPage() {
     year: 'numeric',
   });
   const timeStr = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-  const speakers = (ev.speakers ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  const fallbackSpeakers = (ev.speakers ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  const hasStructuredSpeakers = (eventSpeakers?.length ?? 0) > 0;
   const isPast = ev.status === 'past';
   const theme = (ev as any).theme as string | null | undefined;
   const topic = (ev as any).topic as string | null | undefined;
@@ -152,7 +171,7 @@ function EventDetailPage() {
                   </div>
                 </div>
               )}
-              {speakers.length > 0 && (
+              {(hasStructuredSpeakers || fallbackSpeakers.length > 0) && (
                 <div className="flex items-start gap-3">
                   <i className="bx bx-microphone mt-0.5 text-xl text-brand-purple" />
                   <div>
@@ -160,13 +179,46 @@ function EventDetailPage() {
                       Speakers
                     </dt>
                     <dd>
-                      <ul className="mt-1 space-y-1">
-                        {speakers.map((name) => (
-                          <li key={name} className="font-medium text-brand-ink">
-                            {name}
-                          </li>
-                        ))}
-                      </ul>
+                      {hasStructuredSpeakers ? (
+                        <ul className="mt-2 space-y-3">
+                          {eventSpeakers!.map((s) => (
+                            <li key={s.id} className="flex items-center gap-3">
+                              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-brand-sand">
+                                {s.photo_url ? (
+                                  <img src={s.photo_url} alt={s.name} className="h-full w-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center font-display text-sm text-brand-clay/50">
+                                    {s.name.charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                {s.social_url ? (
+                                  <a
+                                    href={s.social_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-medium text-brand-ink hover:text-brand-purple"
+                                  >
+                                    {s.name}
+                                  </a>
+                                ) : (
+                                  <p className="font-medium text-brand-ink">{s.name}</p>
+                                )}
+                                {s.title && <p className="truncate text-xs text-brand-ink/60">{s.title}</p>}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="mt-1 space-y-1">
+                          {fallbackSpeakers.map((name) => (
+                            <li key={name} className="font-medium text-brand-ink">
+                              {name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </dd>
                   </div>
                 </div>
