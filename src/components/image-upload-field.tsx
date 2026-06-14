@@ -77,16 +77,25 @@ export function ImageUploadField({
   folder,
   label = 'Upload image',
   defaultRatio = '1:1',
+  ratioValue,
+  onRatioChange,
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
   folder: string;
   label?: string;
   defaultRatio?: ImageRatio;
+  ratioValue?: ImageRatio;
+  onRatioChange?: (ratio: ImageRatio) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [ratio, setRatio] = useState<ImageRatio>(defaultRatio);
+  const [internalRatio, setInternalRatio] = useState<ImageRatio>(defaultRatio);
+  const ratio = ratioValue ?? internalRatio;
+  const chooseRatio = (next: ImageRatio) => {
+    setInternalRatio(next);
+    onRatioChange?.(next);
+  };
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -136,7 +145,7 @@ export function ImageUploadField({
           <button
             key={r}
             type="button"
-            onClick={() => setRatio(r)}
+            onClick={() => chooseRatio(r)}
             className={`rounded-full border px-3 py-1 text-xs transition-colors ${
               ratio === r
                 ? 'border-brand-purple bg-brand-purple text-white'
