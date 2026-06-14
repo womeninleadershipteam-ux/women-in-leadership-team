@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/use-auth';
 import { useIsAdmin } from '@/lib/use-is-admin';
 import { useDraft } from '@/lib/use-draft';
-import { ImageUploadField } from '@/components/image-upload-field';
+import { ImageUploadField, type ImageRatio } from '@/components/image-upload-field';
 import { composeLocation, VIRTUAL_PLATFORMS, type LocationDetails } from '@/lib/event-location';
 
 export const Route = createFileRoute('/admin')({
@@ -24,6 +24,7 @@ type EventRow = {
   location_type: string;
   location_details: LocationDetails;
   image_url: string | null;
+  image_aspect_ratio: ImageRatio;
   speakers: string | null;
   registration_url: string | null;
   theme: string | null;
@@ -36,6 +37,7 @@ type EventSpeaker = {
   name: string;
   title: string | null;
   photo_url: string | null;
+  photo_aspect_ratio: ImageRatio;
   social_url: string | null;
 };
 
@@ -147,6 +149,7 @@ const emptyEvent: EventRow = {
   location_type: 'onsite',
   location_details: {},
   image_url: '',
+  image_aspect_ratio: '1:1',
   speakers: '',
   registration_url: '',
   theme: '',
@@ -211,6 +214,7 @@ function EventsAdmin() {
         name: s.name.trim(),
         title: s.title?.trim() || null,
         photo_url: s.photo_url || null,
+        photo_aspect_ratio: s.photo_aspect_ratio || '4:5',
         social_url: s.social_url?.trim() || null,
         display_order: i,
       }));
