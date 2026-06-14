@@ -4,7 +4,68 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const TEN_YEARS_SECONDS = 60 * 60 * 24 * 365 * 10;
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
+export type ImageRatio = '4:5' | '3:4' | '1:1';
+
+const RATIO_VALUES: Record<ImageRatio, number> = {
+  '4:5': 4 / 5,
+  '3:4': 3 / 4,
+  '1:1': 1,
+};
+
+function ratioToCss(ratio: ImageRatio) {
+  return ratio.replace(':', ' / ');
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read image'));
+    };
+    img.src = url;
+  });
+}
+
+async function cropToRatio(file: File, ratio: ImageRatio): Promise<File> {
+  const img = await loadImage(file);
+  const targetRatio = RATIO_VALUES[ratio];
+  const imageRatio = img.naturalWidth / img.naturalHeight;
+  let sx = 0;
+  let sy = 0;
+  let sw = img.naturalWidth;
+  let sh = img.naturalHeight;
+
+  if (imageRatio > targetRatio) {
+    sw = img.naturalHeight * targetRatio;
+    sx = (img.naturalWidth - sw) / 2;
+  } else if (imageRatio < targetRatio) {
+    sh = img.naturalWidth / targetRatio;
+    sy = (img.naturalHeight - sh) / 2;
+  }
+
+  const outputWidth = ratio === '1:1' ? 1200 : ratio === '4:5' ? 1200 : 1200;
+  const outputHeight = ratio === '1:1' ? 1200 : ratio === '4:5' ? 1500 : 1600;
+  const canvas = document.createElement('canvas');
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not prepare image crop');
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outputWidth, outputHeight);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  if (!blob) throw new Error('Could not crop image');
+  const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+  return new File([blob], `${safeName || 'image'}-${ratio.replace(':', 'x')}.jpg`, {
+    type: 'image/jpeg',
+  });
+}
 
 /**
  * Uploads an image to the private `event-images` bucket and returns a
@@ -15,38 +76,50 @@ export function ImageUploadField({
   onChange,
   folder,
   label = 'Upload image',
+  defaultRatio = '1:1',
+  ratioValue,
+  onRatioChange,
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
   folder: string;
   label?: string;
+  defaultRatio?: ImageRatio;
+  ratioValue?: ImageRatio;
+  onRatioChange?: (ratio: ImageRatio) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [internalRatio, setInternalRatio] = useState<ImageRatio>(defaultRatio);
+  const ratio = ratioValue ?? internalRatio;
+  const chooseRatio = (next: ImageRatio) => {
+    setInternalRatio(next);
+    onRatioChange?.(next);
+  };
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Please choose an image file');
       return;
     }
-    if (file.size > MAX_BYTES) {
-      toast.error('Image must be under 5MB');
+    if (file.size > MAX_SOURCE_BYTES) {
+      toast.error('Image must be under 20MB');
       return;
     }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const cropped = await cropToRatio(file, ratio);
+      const path = `${folder}/${crypto.randomUUID()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from('event-images')
-        .upload(path, file, { contentType: file.type, upsert: false });
+        .upload(path, cropped, { contentType: cropped.type, upsert: false });
       if (upErr) throw upErr;
       const { data, error: signErr } = await supabase.storage
         .from('event-images')
         .createSignedUrl(path, TEN_YEARS_SECONDS);
       if (signErr || !data?.signedUrl) throw signErr ?? new Error('Could not create image link');
       onChange(data.signedUrl);
-      toast.success('Image uploaded');
+      toast.success(`Image uploaded as ${ratio}`);
     } catch (e: any) {
       toast.error(e?.message ?? 'Upload failed');
     } finally {
@@ -67,9 +140,27 @@ export function ImageUploadField({
           e.target.value = '';
         }}
       />
+      <div className="mb-3 flex flex-wrap gap-2">
+        {(['4:5', '3:4', '1:1'] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => chooseRatio(r)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              ratio === r
+                ? 'border-brand-purple bg-brand-purple text-white'
+                : 'border-border bg-background text-brand-ink/70 hover:border-brand-purple'
+            }`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
       {value ? (
         <div className="flex items-center gap-3">
-          <img src={value} alt="Uploaded preview" className="h-16 w-16 rounded-lg border border-border object-cover" />
+          <div className="h-20 w-16 overflow-hidden rounded-lg border border-border bg-brand-sand" style={{ aspectRatio: ratioToCss(ratio) }}>
+            <img src={value} alt="Uploaded preview" className="h-full w-full object-cover" />
+          </div>
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
