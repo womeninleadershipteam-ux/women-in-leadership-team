@@ -201,6 +201,7 @@ export type Database = {
           event_id: string
           id: string
           name: string
+          photo_aspect_ratio: string
           photo_url: string | null
           social_url: string | null
           title: string | null
@@ -213,6 +214,7 @@ export type Database = {
           event_id: string
           id?: string
           name: string
+          photo_aspect_ratio?: string
           photo_url?: string | null
           social_url?: string | null
           title?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           event_id?: string
           id?: string
           name?: string
+          photo_aspect_ratio?: string
           photo_url?: string | null
           social_url?: string | null
           title?: string | null
@@ -247,6 +250,7 @@ export type Database = {
           display_order: number
           event_date: string
           id: string
+          image_aspect_ratio: string
           image_url: string | null
           location: string | null
           location_details: Json
@@ -265,6 +269,7 @@ export type Database = {
           display_order?: number
           event_date: string
           id?: string
+          image_aspect_ratio?: string
           image_url?: string | null
           location?: string | null
           location_details?: Json
@@ -283,6 +288,7 @@ export type Database = {
           display_order?: number
           event_date?: string
           id?: string
+          image_aspect_ratio?: string
           image_url?: string | null
           location?: string | null
           location_details?: Json
