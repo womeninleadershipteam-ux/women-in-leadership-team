@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const TEN_YEARS_SECONDS = 60 * 60 * 24 * 365 * 10;
 const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
-type ImageRatio = '4:5' | '3:4' | '1:1';
+export type ImageRatio = '4:5' | '3:4' | '1:1';
 
 const RATIO_VALUES: Record<ImageRatio, number> = {
   '4:5': 4 / 5,
