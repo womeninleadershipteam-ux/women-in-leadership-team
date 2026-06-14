@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/wil-logo.svg";
+import logoAsset from "@/assets/wil-logo.png";
 
 export function WilLogo({ className = "h-10 w-auto", invert = false }: { className?: string; invert?: boolean }) {
   return (
