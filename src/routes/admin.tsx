@@ -341,7 +341,14 @@ function EventEditor({
   });
   useEffect(() => {
     if (existingSp && !draftSp.wasRestored && sp.length === 0 && existingSp.length > 0) {
-      setSp(existingSp.map((s) => ({ id: s.id, name: s.name, title: s.title, photo_url: s.photo_url, social_url: s.social_url })));
+      setSp(existingSp.map((s) => ({
+        id: s.id,
+        name: s.name,
+        title: s.title,
+        photo_url: s.photo_url,
+        photo_aspect_ratio: s.photo_aspect_ratio || '4:5',
+        social_url: s.social_url,
+      })));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingSp]);
@@ -441,6 +448,8 @@ function EventEditor({
           <ImageUploadField
             value={r.image_url || null}
             onChange={(url) => u('image_url', url ?? '')}
+            ratioValue={r.image_aspect_ratio || '1:1'}
+            onRatioChange={(ratio) => u('image_aspect_ratio', ratio)}
             folder="events"
             label="Upload event flyer"
           />
@@ -470,7 +479,7 @@ function EventEditor({
           </div>
           <button
             type="button"
-            onClick={() => setSp((p) => [...p, { name: '', title: '', photo_url: '', social_url: '' }])}
+            onClick={() => setSp((p) => [...p, { name: '', title: '', photo_url: '', photo_aspect_ratio: '4:5', social_url: '' }])}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:border-brand-purple"
           >
             <Plus size={14} /> Add speaker
@@ -495,8 +504,11 @@ function EventEditor({
                   <ImageUploadField
                     value={s.photo_url || null}
                     onChange={(url) => updateSpeaker(i, { photo_url: url ?? '' })}
+                    ratioValue={s.photo_aspect_ratio || '4:5'}
+                    onRatioChange={(ratio) => updateSpeaker(i, { photo_aspect_ratio: ratio })}
                     folder="speakers"
                     label="Upload speaker photo"
+                    defaultRatio="4:5"
                   />
                 </Field>
                 <Field label="Social URL (LinkedIn etc.)">
