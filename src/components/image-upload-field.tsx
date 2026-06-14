@@ -100,7 +100,7 @@ export function ImageUploadField({
     setUploading(true);
     try {
       const cropped = await cropToRatio(file, ratio);
-      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const path = `${folder}/${crypto.randomUUID()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from('event-images')
         .upload(path, cropped, { contentType: cropped.type, upsert: false });
@@ -110,7 +110,7 @@ export function ImageUploadField({
         .createSignedUrl(path, TEN_YEARS_SECONDS);
       if (signErr || !data?.signedUrl) throw signErr ?? new Error('Could not create image link');
       onChange(data.signedUrl);
-      toast.success('Image uploaded');
+      toast.success(`Image uploaded as ${ratio}`);
     } catch (e: any) {
       toast.error(e?.message ?? 'Upload failed');
     } finally {
@@ -131,9 +131,27 @@ export function ImageUploadField({
           e.target.value = '';
         }}
       />
+      <div className="mb-3 flex flex-wrap gap-2">
+        {(['4:5', '3:4', '1:1'] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRatio(r)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              ratio === r
+                ? 'border-brand-purple bg-brand-purple text-white'
+                : 'border-border bg-background text-brand-ink/70 hover:border-brand-purple'
+            }`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
       {value ? (
         <div className="flex items-center gap-3">
-          <img src={value} alt="Uploaded preview" className="h-16 w-16 rounded-lg border border-border object-cover" />
+          <div className="h-20 w-16 overflow-hidden rounded-lg border border-border bg-brand-sand" style={{ aspectRatio: ratioToCss(ratio) }}>
+            <img src={value} alt="Uploaded preview" className="h-full w-full object-cover" />
+          </div>
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
