@@ -282,6 +282,7 @@ function EventsAdmin() {
                     ...(e as any),
                     location_type: (e as any).location_type ?? 'onsite',
                     location_details: (e as any).location_details ?? {},
+                    image_aspect_ratio: (e as any).image_aspect_ratio ?? '1:1',
                     event_date: new Date(e.event_date).toISOString().slice(0, 16),
                   } as EventRow)
                 }
