@@ -53,8 +53,8 @@ export const Route = createRootRoute({
       { name: "description", content: "A community for women who lead." },
       { property: "og:description", content: "A community for women who lead." },
       { name: "twitter:description", content: "A community for women who lead." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cfc04705-5496-4195-9f66-4f3cb9d20f3c" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/cfc04705-5496-4195-9f66-4f3cb9d20f3c" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/munuk1Cs6BW1q6luHC5q7kwWDQu2/social-images/social-1781424216905-wil-og.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/munuk1Cs6BW1q6luHC5q7kwWDQu2/social-images/social-1781424216905-wil-og.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
