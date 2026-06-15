@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 
-export const Route = createFileRoute('/events/$eventId')({
+export const Route = createFileRoute('/events/$slug')({
   component: EventDetailPage,
   head: () => ({
     meta: [

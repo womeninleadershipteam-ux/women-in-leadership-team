@@ -17,7 +17,7 @@ import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 
 const SpeakersRoute = SpeakersRouteImport.update({
   id: '/speakers',
@@ -59,9 +59,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => EventsRoute,
 } as any)
 
@@ -74,7 +74,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$slug': typeof EventsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +85,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$slug': typeof EventsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +97,7 @@ export interface FileRoutesById {
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$slug': typeof EventsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +110,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +121,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
   id:
     | '__root__'
     | '/'
@@ -132,7 +132,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,22 +204,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
       parentRoute: typeof EventsRoute
     }
   }
 }
 
 interface EventsRouteChildren {
-  EventsEventIdRoute: typeof EventsEventIdRoute
+  EventsSlugRoute: typeof EventsSlugRoute
 }
 
 const EventsRouteChildren: EventsRouteChildren = {
-  EventsEventIdRoute: EventsEventIdRoute,
+  EventsSlugRoute: EventsSlugRoute,
 }
 
 const EventsRouteWithChildren =
