@@ -1,9 +1,9 @@
-import logoAsset from "@/assets/wil-logo.png";
+import logoUrl from "@/assets/wil-logo.png";
 
 export function WilLogo({ className = "h-10 w-auto", invert = false }: { className?: string; invert?: boolean }) {
   return (
     <img
-      src={logoAsset.url}
+      src={logoUrl}
       alt="Women in Leadership"
       className={className}
       style={invert ? { filter: "brightness(0) invert(1)" } : undefined}
