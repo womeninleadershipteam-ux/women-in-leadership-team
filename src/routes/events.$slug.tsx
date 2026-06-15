@@ -326,8 +326,8 @@ function RelatedCard({ ev }: { ev: any }) {
   });
   return (
     <Link
-      to="/events/$eventId"
-      params={{ eventId: ev.id }}
+      to="/events/$slug"
+      params={{ slug: ev.id }}
       className="group flex gap-4 rounded-xl border border-border/50 bg-card p-3 transition-all hover:border-brand-purple/40 hover:shadow-md"
     >
       <div className="aspect-square h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-brand-sand">

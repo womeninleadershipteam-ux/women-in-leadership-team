@@ -151,8 +151,8 @@ function HomePage() {
               </p>
             </div>
             <Link
-              to="/events/$eventId"
-              params={{ eventId: upcoming.id }}
+              to="/events/$slug"
+              params={{ slug: upcoming.id }}
               className="inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               View event <i className="bx bx-right-arrow-alt text-lg" />
@@ -237,8 +237,8 @@ function HomePage() {
             {pastFlyers.map((f) => (
               <Link
                 key={f.id}
-                to="/events/$eventId"
-                params={{ eventId: f.id }}
+                to="/events/$slug"
+                params={{ slug: f.id }}
                 className="group block overflow-hidden rounded-2xl border border-border/50 bg-card"
               >
                 <div className="aspect-square overflow-hidden bg-brand-sand">
