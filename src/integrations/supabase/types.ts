@@ -199,10 +199,12 @@ export type Database = {
           created_at: string
           display_order: number
           event_id: string
+          gender: string
           id: string
           name: string
           photo_aspect_ratio: string
           photo_url: string | null
+          slug: string
           social_url: string | null
           title: string | null
           updated_at: string
@@ -212,10 +214,12 @@ export type Database = {
           created_at?: string
           display_order?: number
           event_id: string
+          gender?: string
           id?: string
           name: string
           photo_aspect_ratio?: string
           photo_url?: string | null
+          slug: string
           social_url?: string | null
           title?: string | null
           updated_at?: string
@@ -225,10 +229,12 @@ export type Database = {
           created_at?: string
           display_order?: number
           event_id?: string
+          gender?: string
           id?: string
           name?: string
           photo_aspect_ratio?: string
           photo_url?: string | null
+          slug?: string
           social_url?: string | null
           title?: string | null
           updated_at?: string
@@ -256,6 +262,7 @@ export type Database = {
           location_details: Json
           location_type: string
           registration_url: string | null
+          slug: string
           speakers: string | null
           status: string
           theme: string | null
@@ -275,6 +282,7 @@ export type Database = {
           location_details?: Json
           location_type?: string
           registration_url?: string | null
+          slug: string
           speakers?: string | null
           status?: string
           theme?: string | null
@@ -294,6 +302,7 @@ export type Database = {
           location_details?: Json
           location_type?: string
           registration_url?: string | null
+          slug?: string
           speakers?: string | null
           status?: string
           theme?: string | null
@@ -303,22 +312,67 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_drafts: {
+        Row: {
+          audience: Json
+          author_id: string
+          body_html: string
+          created_at: string
+          id: string
+          preview_text: string
+          recipient_count: number | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Json
+          author_id: string
+          body_html?: string
+          created_at?: string
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Json
+          author_id?: string
+          body_html?: string
+          created_at?: string
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
           email: string
+          first_name: string | null
           id: string
           source: string | null
         }
         Insert: {
           created_at?: string
           email: string
+          first_name?: string | null
           id?: string
           source?: string | null
         }
         Update: {
           created_at?: string
           email?: string
+          first_name?: string | null
           id?: string
           source?: string | null
         }
@@ -432,6 +486,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      slugify: { Args: { _input: string }; Returns: string }
+      unique_slug: {
+        Args: {
+          _base: string
+          _column: string
+          _self_id: string
+          _table: unknown
+        }
+        Returns: string
       }
     }
     Enums: {

@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ExternalLink } from 'lucide-react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
+import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
 
 export const Route = createFileRoute('/speakers')({
   component: SpeakersPage,
@@ -20,11 +20,13 @@ export const Route = createFileRoute('/speakers')({
 
 type EventSpeakerWithEvent = {
   id: string;
+  slug: string;
   name: string;
   title: string | null;
   bio: string | null;
   photo_url: string | null;
   social_url: string | null;
+  gender: string | null;
   events: { id: string; title: string; event_date: string; status: string } | null;
 };
 
@@ -34,7 +36,7 @@ function useEventSpeakers() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('event_speakers')
-        .select('id, name, title, bio, photo_url, social_url, events(id, title, event_date, status)')
+        .select('id, slug, name, title, bio, photo_url, social_url, gender, events(id, title, event_date, status)')
         .order('display_order', { ascending: true });
       return (data ?? []) as EventSpeakerWithEvent[];
     },
@@ -108,21 +110,17 @@ function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
     : null;
   return (
     <article className="group">
-      <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-sand">
-        {s.photo_url ? (
+      <Link to="/speakers/$slug" params={{ slug: s.slug }} className="block">
+        <div className="aspect-square overflow-hidden rounded-full border border-border bg-brand-sand">
           <img
-            src={s.photo_url}
+            src={speakerPhotoUrl(s)}
             alt={s.name}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center font-display text-5xl text-brand-clay/40">
-            {s.name.charAt(0)}
-          </div>
-        )}
-      </div>
-      <h3 className="mt-5 font-display text-2xl text-brand-ink">{s.name}</h3>
+        </div>
+        <h3 className="mt-5 font-display text-2xl text-brand-ink group-hover:text-brand-purple">{s.name}</h3>
+      </Link>
       {s.title && <p className="text-sm text-brand-ink/60">{s.title}</p>}
       {s.events && (
         <p className="mt-2 text-xs uppercase tracking-widest text-brand-ink/50">
@@ -130,17 +128,10 @@ function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
           {eventDate ? ` · ${eventDate}` : ''}
         </p>
       )}
-      {s.bio && <p className="mt-3 text-sm leading-relaxed text-brand-ink/75">{s.bio}</p>}
-      {s.social_url && (
-        <a
-          href={s.social_url}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-purple hover:underline"
-        >
-          Connect <ExternalLink size={12} />
-        </a>
-      )}
+      {s.bio && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-brand-ink/75">{s.bio}</p>}
+      <Link to="/speakers/$slug" params={{ slug: s.slug }} className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-purple hover:underline">
+        View profile →
+      </Link>
     </article>
   );
 }

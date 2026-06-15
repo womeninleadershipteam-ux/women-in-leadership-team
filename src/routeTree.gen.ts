@@ -17,7 +17,8 @@ import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as SpeakersSlugRouteImport } from './routes/speakers.$slug'
+import { Route as EventsSlugRouteImport } from './routes/events.$slug'
 
 const SpeakersRoute = SpeakersRouteImport.update({
   id: '/speakers',
@@ -59,9 +60,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
+const SpeakersSlugRoute = SpeakersSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => SpeakersRoute,
+} as any)
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => EventsRoute,
 } as any)
 
@@ -73,8 +79,9 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/speakers': typeof SpeakersRouteWithChildren
+  '/events/$slug': typeof EventsSlugRoute
+  '/speakers/$slug': typeof SpeakersSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +91,9 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/speakers': typeof SpeakersRouteWithChildren
+  '/events/$slug': typeof EventsSlugRoute
+  '/speakers/$slug': typeof SpeakersSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +104,9 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/events': typeof EventsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/speakers': typeof SpeakersRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/speakers': typeof SpeakersRouteWithChildren
+  '/events/$slug': typeof EventsSlugRoute
+  '/speakers/$slug': typeof SpeakersSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +119,8 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
+    | '/speakers/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +131,8 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
+    | '/speakers/$slug'
   id:
     | '__root__'
     | '/'
@@ -132,7 +143,8 @@ export interface FileRouteTypes {
     | '/events'
     | '/reset-password'
     | '/speakers'
-    | '/events/$eventId'
+    | '/events/$slug'
+    | '/speakers/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,7 +155,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   EventsRoute: typeof EventsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SpeakersRoute: typeof SpeakersRoute
+  SpeakersRoute: typeof SpeakersRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -204,26 +216,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
+    '/speakers/$slug': {
+      id: '/speakers/$slug'
+      path: '/$slug'
+      fullPath: '/speakers/$slug'
+      preLoaderRoute: typeof SpeakersSlugRouteImport
+      parentRoute: typeof SpeakersRoute
+    }
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
       parentRoute: typeof EventsRoute
     }
   }
 }
 
 interface EventsRouteChildren {
-  EventsEventIdRoute: typeof EventsEventIdRoute
+  EventsSlugRoute: typeof EventsSlugRoute
 }
 
 const EventsRouteChildren: EventsRouteChildren = {
-  EventsEventIdRoute: EventsEventIdRoute,
+  EventsSlugRoute: EventsSlugRoute,
 }
 
 const EventsRouteWithChildren =
   EventsRoute._addFileChildren(EventsRouteChildren)
+
+interface SpeakersRouteChildren {
+  SpeakersSlugRoute: typeof SpeakersSlugRoute
+}
+
+const SpeakersRouteChildren: SpeakersRouteChildren = {
+  SpeakersSlugRoute: SpeakersSlugRoute,
+}
+
+const SpeakersRouteWithChildren = SpeakersRoute._addFileChildren(
+  SpeakersRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -233,7 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   EventsRoute: EventsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
-  SpeakersRoute: SpeakersRoute,
+  SpeakersRoute: SpeakersRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
