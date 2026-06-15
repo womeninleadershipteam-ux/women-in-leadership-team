@@ -39,6 +39,7 @@ type EventSpeaker = {
   photo_url: string | null;
   photo_aspect_ratio: ImageRatio;
   social_url: string | null;
+  gender?: 'female' | 'male' | 'unspecified';
 };
 
 function AdminPage() {
