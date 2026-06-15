@@ -79,6 +79,10 @@ export function ImageUploadField({
   defaultRatio = '1:1',
   ratioValue,
   onRatioChange,
+  lockRatio,
+  warning,
+  preview = 'rectangle',
+  bucket = 'event-images',
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
@@ -87,12 +91,21 @@ export function ImageUploadField({
   defaultRatio?: ImageRatio;
   ratioValue?: ImageRatio;
   onRatioChange?: (ratio: ImageRatio) => void;
+  /** Hide the ratio picker and force this ratio. */
+  lockRatio?: ImageRatio;
+  /** Optional warning text shown above the field. */
+  warning?: string;
+  /** Preview shape: rectangle (default) or circle (for round avatars). */
+  preview?: 'rectangle' | 'circle';
+  /** Storage bucket id (defaults to event-images). */
+  bucket?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [internalRatio, setInternalRatio] = useState<ImageRatio>(defaultRatio);
-  const ratio = ratioValue ?? internalRatio;
+  const [internalRatio, setInternalRatio] = useState<ImageRatio>(lockRatio ?? defaultRatio);
+  const ratio: ImageRatio = lockRatio ?? ratioValue ?? internalRatio;
   const chooseRatio = (next: ImageRatio) => {
+    if (lockRatio) return;
     setInternalRatio(next);
     onRatioChange?.(next);
   };
@@ -111,11 +124,11 @@ export function ImageUploadField({
       const cropped = await cropToRatio(file, ratio);
       const path = `${folder}/${crypto.randomUUID()}.jpg`;
       const { error: upErr } = await supabase.storage
-        .from('event-images')
+        .from(bucket)
         .upload(path, cropped, { contentType: cropped.type, upsert: false });
       if (upErr) throw upErr;
       const { data, error: signErr } = await supabase.storage
-        .from('event-images')
+        .from(bucket)
         .createSignedUrl(path, TEN_YEARS_SECONDS);
       if (signErr || !data?.signedUrl) throw signErr ?? new Error('Could not create image link');
       onChange(data.signedUrl);
@@ -129,6 +142,11 @@ export function ImageUploadField({
 
   return (
     <div>
+      {warning && (
+        <p className="mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {warning}
+        </p>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -140,25 +158,32 @@ export function ImageUploadField({
           e.target.value = '';
         }}
       />
-      <div className="mb-3 flex flex-wrap gap-2">
-        {(['4:5', '3:4', '1:1'] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => chooseRatio(r)}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              ratio === r
-                ? 'border-brand-purple bg-brand-purple text-white'
-                : 'border-border bg-background text-brand-ink/70 hover:border-brand-purple'
-            }`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
+      {!lockRatio && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {(['4:5', '3:4', '1:1'] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => chooseRatio(r)}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                ratio === r
+                  ? 'border-brand-purple bg-brand-purple text-white'
+                  : 'border-border bg-background text-brand-ink/70 hover:border-brand-purple'
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
       {value ? (
         <div className="flex items-center gap-3">
-          <div className="h-20 w-16 overflow-hidden rounded-lg border border-border bg-brand-sand" style={{ aspectRatio: ratioToCss(ratio) }}>
+          <div
+            className={`h-20 overflow-hidden border border-border bg-brand-sand ${
+              preview === 'circle' ? 'aspect-square w-20 rounded-full' : 'w-16 rounded-lg'
+            }`}
+            style={preview === 'circle' ? undefined : { aspectRatio: ratioToCss(ratio) }}
+          >
             <img src={value} alt="Uploaded preview" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col gap-1.5">
