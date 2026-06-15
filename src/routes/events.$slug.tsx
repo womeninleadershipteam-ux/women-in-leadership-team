@@ -197,30 +197,19 @@ function EventDetailPage() {
                         <ul className="mt-2 space-y-3">
                           {eventSpeakers!.map((s) => (
                             <li key={s.id} className="flex items-center gap-3">
-                              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-brand-sand">
-                                {s.photo_url ? (
-                                  <img src={s.photo_url} alt={s.name} className="h-full w-full object-cover" loading="lazy" />
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center font-display text-sm text-brand-clay/50">
-                                    {s.name.charAt(0)}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                {s.social_url ? (
-                                  <a
-                                    href={s.social_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="font-medium text-brand-ink hover:text-brand-purple"
-                                  >
-                                    {s.name}
-                                  </a>
-                                ) : (
+                              <Link
+                                to="/speakers/$slug"
+                                params={{ slug: s.slug }}
+                                className="flex items-center gap-3 hover:text-brand-purple"
+                              >
+                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border bg-brand-sand">
+                                  <img src={speakerPhotoUrl(s)} alt={s.name} className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="min-w-0">
                                   <p className="font-medium text-brand-ink">{s.name}</p>
-                                )}
-                                {s.title && <p className="truncate text-xs text-brand-ink/60">{s.title}</p>}
-                              </div>
+                                  {s.title && <p className="truncate text-xs text-brand-ink/60">{s.title}</p>}
+                                </div>
+                              </Link>
                             </li>
                           ))}
                         </ul>
