@@ -56,7 +56,7 @@ function usePastFlyers() {
     queryFn: async () => {
       const { data } = await supabase
         .from('events')
-        .select('id, title, image_url, event_date')
+        .select('id, slug, title, image_url, event_date')
         .eq('status', 'past')
         .not('image_url', 'is', null)
         .order('event_date', { ascending: false })
@@ -152,7 +152,7 @@ function HomePage() {
             </div>
             <Link
               to="/events/$slug"
-              params={{ slug: upcoming.id }}
+              params={{ slug: upcoming.slug }}
               className="inline-flex items-center gap-2 rounded-full bg-brand-ink px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               View event <i className="bx bx-right-arrow-alt text-lg" />
@@ -238,7 +238,7 @@ function HomePage() {
               <Link
                 key={f.id}
                 to="/events/$slug"
-                params={{ slug: f.id }}
+                params={{ slug: f.slug }}
                 className="group block overflow-hidden rounded-2xl border border-border/50 bg-card"
               >
                 <div className="aspect-square overflow-hidden bg-brand-sand">

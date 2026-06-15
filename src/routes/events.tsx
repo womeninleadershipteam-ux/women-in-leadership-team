@@ -40,7 +40,7 @@ function EventCard({ ev }: { ev: any }) {
   return (
     <Link
       to="/events/$slug"
-      params={{ slug: ev.id }}
+      params={{ slug: ev.slug }}
       className="group flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-brand-purple/40 hover:shadow-lg"
     >
       <div className="aspect-square overflow-hidden bg-brand-sand">
