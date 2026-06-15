@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ExternalLink } from 'lucide-react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
+import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
 
 export const Route = createFileRoute('/speakers')({
   component: SpeakersPage,
@@ -20,11 +20,13 @@ export const Route = createFileRoute('/speakers')({
 
 type EventSpeakerWithEvent = {
   id: string;
+  slug: string;
   name: string;
   title: string | null;
   bio: string | null;
   photo_url: string | null;
   social_url: string | null;
+  gender: string | null;
   events: { id: string; title: string; event_date: string; status: string } | null;
 };
 
@@ -34,7 +36,7 @@ function useEventSpeakers() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('event_speakers')
-        .select('id, name, title, bio, photo_url, social_url, events(id, title, event_date, status)')
+        .select('id, slug, name, title, bio, photo_url, social_url, gender, events(id, title, event_date, status)')
         .order('display_order', { ascending: true });
       return (data ?? []) as EventSpeakerWithEvent[];
     },
