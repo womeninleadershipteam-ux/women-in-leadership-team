@@ -1,9 +1,19 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router';
+import { createFileRoute, Link, notFound, redirect } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
+import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const Route = createFileRoute('/events/$slug')({
+  // Old UUID-style URLs (and admin/editor links) redirect to the slug URL.
+  beforeLoad: async ({ params }) => {
+    if (UUID_RE.test(params.slug)) {
+      const { data } = await supabase.from('events').select('slug').eq('id', params.slug).maybeSingle();
+      if (data?.slug) throw redirect({ to: '/events/$slug', params: { slug: data.slug }, replace: true });
+    }
+  },
   component: EventDetailPage,
   head: () => ({
     meta: [
@@ -41,14 +51,14 @@ export const Route = createFileRoute('/events/$slug')({
 });
 
 function EventDetailPage() {
-  const { eventId } = Route.useParams();
+  const { slug } = Route.useParams();
   const { data: ev, isLoading } = useQuery({
-    queryKey: ['event', eventId],
+    queryKey: ['event', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .eq('id', eventId)
+        .eq('slug', slug)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -56,12 +66,13 @@ function EventDetailPage() {
   });
 
   const { data: related } = useQuery({
-    queryKey: ['events', 'related', eventId],
+    queryKey: ['events', 'related', ev?.id],
+    enabled: !!ev?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from('events')
-        .select('id,title,event_date,image_url,status,location')
-        .neq('id', eventId)
+        .select('id,slug,title,event_date,image_url,status,location')
+        .neq('id', ev!.id)
         .order('event_date', { ascending: false })
         .limit(6);
       return data ?? [];
@@ -69,19 +80,22 @@ function EventDetailPage() {
   });
 
   const { data: eventSpeakers } = useQuery({
-    queryKey: ['event-speakers', eventId],
+    queryKey: ['event-speakers', ev?.id],
+    enabled: !!ev?.id,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('event_speakers')
-        .select('id, name, title, photo_url, social_url')
-        .eq('event_id', eventId)
+        .select('id, slug, name, title, photo_url, social_url, gender')
+        .eq('event_id', ev!.id)
         .order('display_order');
       return (data ?? []) as {
         id: string;
+        slug: string;
         name: string;
         title: string | null;
         photo_url: string | null;
         social_url: string | null;
+        gender: string | null;
       }[];
     },
   });
