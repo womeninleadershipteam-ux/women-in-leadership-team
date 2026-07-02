@@ -4,7 +4,7 @@ import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
 
-export const Route = createFileRoute('/speakers')({
+export const Route = createFileRoute('/speakers/')({
   component: SpeakersPage,
   head: () => ({
     meta: [

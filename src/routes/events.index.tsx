@@ -4,7 +4,7 @@ import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { NewsletterSignup } from '@/components/newsletter-signup';
 
-export const Route = createFileRoute('/events')({
+export const Route = createFileRoute('/events/')({
   component: EventsPage,
   head: () => ({
     meta: [
