@@ -109,7 +109,7 @@ function AdminPage() {
         </div>
 
         <div className="mt-10 flex w-fit max-w-full flex-wrap gap-1 rounded-2xl border border-border bg-card p-1 sm:rounded-full">
-          {(['events', 'announcement', 'subscribers', 'messages', 'settings'] as const).map((t) => (
+          {(['events', 'announcement', 'subscribers', 'backfill', 'messages', 'settings'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -128,6 +128,7 @@ function AdminPage() {
           {tab === 'events' && <EventsAdmin />}
           {tab === 'announcement' && <AnnouncementAdmin />}
           {tab === 'subscribers' && <SubscribersAdmin />}
+          {tab === 'backfill' && <BackfillNamesAdmin />}
           {tab === 'messages' && <MessagesAdmin />}
           {tab === 'settings' && <SettingsAdmin />}
         </div>
