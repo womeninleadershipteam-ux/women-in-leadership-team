@@ -820,3 +820,161 @@ function MessagesAdmin() {
     </div>
   );
 }
+/* ----------------- BACKFILL FIRST NAMES ----------------- */
+
+const GENERIC_LOCALS = new Set([
+  'info', 'hello', 'team', 'admin', 'contact', 'support', 'sales',
+  'noreply', 'no-reply', 'newsletter', 'mail', 'office', 'hi',
+]);
+
+function guessFirstName(email: string): string {
+  const local = (email.split('@')[0] ?? '').split('+')[0].toLowerCase();
+  if (!local || /^\d+$/.test(local) || GENERIC_LOCALS.has(local)) return 'Friend';
+  const first = local.split(/[._-]+/).filter(Boolean)[0] ?? '';
+  if (!first || /^\d+$/.test(first) || GENERIC_LOCALS.has(first)) return 'Friend';
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
+type BackfillRow = {
+  id: string;
+  email: string;
+  existing: string | null;
+  guessed: string;
+  edited: string;
+  include: boolean;
+};
+
+function BackfillNamesAdmin() {
+  const qc = useQueryClient();
+  const [rows, setRows] = useState<BackfillRow[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [onlyMissing, setOnlyMissing] = useState(true);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'subscribers', 'backfill'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('newsletter_subscribers')
+        .select('id, email, first_name')
+        .order('created_at', { ascending: false });
+      return (data ?? []) as { id: string; email: string; first_name: string | null }[];
+    },
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    const source = onlyMissing ? data.filter((r) => !r.first_name || !r.first_name.trim()) : data;
+    setRows(
+      source.map((r) => {
+        const guessed = guessFirstName(r.email);
+        return {
+          id: r.id,
+          email: r.email,
+          existing: r.first_name,
+          guessed,
+          edited: r.first_name?.trim() || guessed,
+          include: guessed !== 'Friend',
+        };
+      }),
+    );
+  }, [data, onlyMissing]);
+
+  const setRow = (id: string, patch: Partial<BackfillRow>) =>
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+
+  const includedCount = rows.filter((r) => r.include && r.edited.trim()).length;
+
+  const save = async () => {
+    const selected = rows.filter((r) => r.include && r.edited.trim());
+    if (!selected.length) return;
+    setSaving(true);
+    try {
+      // Update sequentially to keep it simple; small volumes expected.
+      for (const r of selected) {
+        const { error } = await (supabase as any)
+          .from('newsletter_subscribers')
+          .update({ first_name: r.edited.trim() })
+          .eq('id', r.id);
+        if (error) throw error;
+      }
+      toast.success(`Saved ${selected.length} first name${selected.length === 1 ? '' : 's'}`);
+      qc.invalidateQueries({ queryKey: ['admin', 'subscribers'] });
+      qc.invalidateQueries({ queryKey: ['admin', 'subscribers', 'backfill'] });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-2xl">Backfill subscriber names</h2>
+          <p className="mt-1 text-sm text-brand-ink/60">
+            Guess first names from email addresses. Review, edit, then save.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-brand-ink/70">
+            <input
+              type="checkbox"
+              checked={onlyMissing}
+              onChange={(e) => setOnlyMissing(e.target.checked)}
+            />
+            Only rows missing a name
+          </label>
+          <button
+            onClick={save}
+            disabled={saving || includedCount === 0}
+            className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2 text-sm text-white disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : `Save ${includedCount} selected`}
+          </button>
+        </div>
+      </div>
+
+      {isLoading && <p className="mt-6 text-sm text-brand-ink/50">Loading…</p>}
+      {!isLoading && rows.length === 0 && (
+        <p className="mt-6 rounded-2xl border border-border bg-card p-6 text-center text-sm text-brand-ink/50">
+          Nothing to backfill.
+        </p>
+      )}
+
+      {rows.length > 0 && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-3 border-b border-border bg-brand-sand/40 px-4 py-2 text-[10px] uppercase tracking-widest text-brand-ink/60">
+            <div>Email</div>
+            <div>Guessed</div>
+            <div>First name</div>
+            <div>Include</div>
+          </div>
+          <div className="divide-y divide-border">
+            {rows.map((r) => (
+              <div
+                key={r.id}
+                className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] items-center gap-3 px-4 py-2 text-sm"
+              >
+                <p className="truncate text-brand-ink">{r.email}</p>
+                <p className="truncate text-brand-ink/60">{r.guessed}</p>
+                <input
+                  className={inputCls}
+                  value={r.edited}
+                  onChange={(e) => setRow(r.id, { edited: e.target.value })}
+                />
+                <label className="flex items-center justify-end">
+                  <input
+                    type="checkbox"
+                    checked={r.include}
+                    onChange={(e) => setRow(r.id, { include: e.target.checked })}
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
