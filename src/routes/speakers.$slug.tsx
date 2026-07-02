@@ -18,6 +18,15 @@ type Speaker = {
 };
 
 export const Route = createFileRoute('/speakers/$slug')({
+  loader: async ({ params }) => {
+    const { data } = await (supabase as any)
+      .from('event_speakers')
+      .select('id')
+      .eq('slug', params.slug)
+      .maybeSingle();
+    if (!data) throw notFound();
+    return { id: data.id };
+  },
   component: SpeakerDetailPage,
   head: () => ({
     meta: [
