@@ -506,11 +506,11 @@ function EventEditor({
                   <ImageUploadField
                     value={s.photo_url || null}
                     onChange={(url) => updateSpeaker(i, { photo_url: url ?? '' })}
-                    ratioValue={s.photo_aspect_ratio || '4:5'}
-                    onRatioChange={(ratio) => updateSpeaker(i, { photo_aspect_ratio: ratio })}
                     folder="speakers"
                     label="Upload speaker photo"
-                    defaultRatio="4:5"
+                    lockRatio="1:1"
+                    preview="circle"
+                    warning="Speaker photos must be square (1:1). Non-square uploads are center-cropped automatically."
                   />
                 </Field>
                 <Field label="Social URL (LinkedIn etc.)">
