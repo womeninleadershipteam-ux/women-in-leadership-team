@@ -517,6 +517,17 @@ function EventEditor({
                 <Field label="Social URL (LinkedIn etc.)">
                   <input className={inputCls} value={s.social_url ?? ''} onChange={(e) => updateSpeaker(i, { social_url: e.target.value })} />
                 </Field>
+                <Field label="Gender (for placeholder image)">
+                  <select
+                    className={inputCls}
+                    value={s.gender ?? 'female'}
+                    onChange={(e) => updateSpeaker(i, { gender: e.target.value as 'female' | 'male' | 'unspecified' })}
+                  >
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="unspecified">Prefer not to say</option>
+                  </select>
+                </Field>
               </div>
               <button
                 type="button"
