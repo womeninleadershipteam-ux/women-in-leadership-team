@@ -14,6 +14,15 @@ export const Route = createFileRoute('/events/$slug')({
       if (data?.slug) throw redirect({ to: '/events/$slug', params: { slug: data.slug }, replace: true });
     }
   },
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from('events')
+      .select('id')
+      .eq('slug', params.slug)
+      .maybeSingle();
+    if (!data) throw notFound();
+    return { id: data.id };
+  },
   component: EventDetailPage,
   head: () => ({
     meta: [
