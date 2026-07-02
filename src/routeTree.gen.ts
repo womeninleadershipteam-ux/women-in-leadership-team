@@ -61,14 +61,14 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpeakersSlugRoute = SpeakersSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => SpeakersRoute,
+  id: '/speakers/$slug',
+  path: '/speakers/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EventsSlugRoute = EventsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => EventsRoute,
+  id: '/events/$slug',
+  path: '/events/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -154,6 +154,8 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  EventsSlugRoute: typeof EventsSlugRoute
+  SpeakersSlugRoute: typeof SpeakersSlugRoute
   EventsIndexRoute: typeof EventsIndexRoute
   SpeakersIndexRoute: typeof SpeakersIndexRoute
 }
@@ -218,17 +220,17 @@ declare module '@tanstack/react-router' {
     }
     '/speakers/$slug': {
       id: '/speakers/$slug'
-      path: '/$slug'
+      path: '/speakers/$slug'
       fullPath: '/speakers/$slug'
       preLoaderRoute: typeof SpeakersSlugRouteImport
-      parentRoute: typeof SpeakersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/events/$slug': {
       id: '/events/$slug'
-      path: '/$slug'
+      path: '/events/$slug'
       fullPath: '/events/$slug'
       preLoaderRoute: typeof EventsSlugRouteImport
-      parentRoute: typeof EventsRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -240,6 +242,8 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  EventsSlugRoute: EventsSlugRoute,
+  SpeakersSlugRoute: SpeakersSlugRoute,
   EventsIndexRoute: EventsIndexRoute,
   SpeakersIndexRoute: SpeakersIndexRoute,
 }
