@@ -108,7 +108,7 @@ function HomePage() {
           </div>
 
           <div className="relative wil-rise wil-rise-delay-2">
-            <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-sand shadow-2xl">
+            <div className="aspect-[4/5] overflow-hidden bg-brand-sand shadow-2xl">
               <img
                 src={heroImg}
                 alt="Women in conversation at a Women in Leadership event"
