@@ -46,7 +46,7 @@ function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'events' | 'announcement' | 'subscribers' | 'messages' | 'settings'>('events');
+  const [tab, setTab] = useState<'events' | 'announcement' | 'subscribers' | 'backfill' | 'messages' | 'settings'>('events');
 
   useEffect(() => {
     // Double-check with the auth server before kicking the admin out — a
