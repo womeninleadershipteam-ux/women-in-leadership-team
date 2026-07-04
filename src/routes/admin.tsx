@@ -10,6 +10,8 @@ import { useIsAdmin } from '@/lib/use-is-admin';
 import { useDraft } from '@/lib/use-draft';
 import { ImageUploadField, type ImageRatio } from '@/components/image-upload-field';
 import { composeLocation, VIRTUAL_PLATFORMS, type LocationDetails } from '@/lib/event-location';
+import { RichTextEditor } from '@/components/rich-text-editor';
+import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
 
 export const Route = createFileRoute('/admin')({
   component: AdminPage,
@@ -39,6 +41,7 @@ type EventSpeaker = {
   photo_url: string | null;
   photo_aspect_ratio: ImageRatio;
   social_url: string | null;
+  bio?: string | null;
   gender?: 'female' | 'male' | 'unspecified';
 };
 
@@ -46,7 +49,9 @@ function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useIsAdmin();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'events' | 'announcement' | 'subscribers' | 'backfill' | 'messages' | 'settings'>('events');
+  const [tab, setTab] = useState<
+    'events' | 'speakers' | 'newsletter' | 'announcement' | 'subscribers' | 'backfill' | 'messages' | 'settings'
+  >('events');
 
   useEffect(() => {
     // Double-check with the auth server before kicking the admin out — a
@@ -109,7 +114,7 @@ function AdminPage() {
         </div>
 
         <div className="mt-10 flex w-fit max-w-full flex-wrap gap-1 rounded-2xl border border-border bg-card p-1 sm:rounded-full">
-          {(['events', 'announcement', 'subscribers', 'backfill', 'messages', 'settings'] as const).map((t) => (
+          {(['events', 'speakers', 'newsletter', 'announcement', 'subscribers', 'backfill', 'messages', 'settings'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -126,6 +131,8 @@ function AdminPage() {
 
         <div className="mt-10">
           {tab === 'events' && <EventsAdmin />}
+          {tab === 'speakers' && <SpeakersAdmin />}
+          {tab === 'newsletter' && <NewsletterAdmin />}
           {tab === 'announcement' && <AnnouncementAdmin />}
           {tab === 'subscribers' && <SubscribersAdmin />}
           {tab === 'backfill' && <BackfillNamesAdmin />}
