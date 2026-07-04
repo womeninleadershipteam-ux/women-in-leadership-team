@@ -130,9 +130,16 @@ function SpeakerDetailPage() {
             <h1 className="font-display text-4xl text-brand-ink md:text-5xl">{speaker.name}</h1>
             {speaker.title && <p className="mt-2 text-lg text-brand-ink/70">{speaker.title}</p>}
             {speaker.bio && (
-              <p className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-brand-ink/80">
-                {speaker.bio}
-              </p>
+              speaker.bio.includes('<') ? (
+                <div
+                  className="prose prose-sm mt-6 max-w-none text-brand-ink/80"
+                  dangerouslySetInnerHTML={{ __html: speaker.bio }}
+                />
+              ) : (
+                <p className="mt-6 whitespace-pre-wrap text-base leading-relaxed text-brand-ink/80">
+                  {speaker.bio}
+                </p>
+              )
             )}
 
             {links.length > 0 && (
