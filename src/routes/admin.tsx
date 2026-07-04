@@ -542,6 +542,17 @@ function EventEditor({
                   </select>
                 </Field>
               </div>
+              <div className="mt-4">
+                <p className="text-xs uppercase tracking-widest text-brand-ink/60">Bio</p>
+                <div className="mt-1.5">
+                  <RichTextEditor
+                    value={s.bio ?? ''}
+                    onChange={(html) => updateSpeaker(i, { bio: html })}
+                    placeholder="Short bio — appears on the speaker profile page"
+                    minHeight={140}
+                  />
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setSp((p) => p.filter((_, idx) => idx !== i))}
