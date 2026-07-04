@@ -1002,3 +1002,362 @@ function BackfillNamesAdmin() {
     </div>
   );
 }
+
+/* ----------------- SPEAKERS (dedicated admin) ----------------- */
+
+type SpeakerAdminRow = {
+  id: string;
+  slug: string;
+  name: string;
+  title: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  social_url: string | null;
+  gender: 'female' | 'male' | 'unspecified' | null;
+  event_id: string | null;
+  events?: { id: string; title: string; event_date: string; status: string } | null;
+};
+
+function SpeakersAdmin() {
+  const qc = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'speakers'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('event_speakers')
+        .select('id, slug, name, title, bio, photo_url, social_url, gender, event_id, events(id, title, event_date, status)')
+        .order('display_order', { ascending: true });
+      return (data ?? []) as SpeakerAdminRow[];
+    },
+  });
+
+  return (
+    <div>
+      <div>
+        <h2 className="font-display text-2xl">Speakers</h2>
+        <p className="mt-1 text-sm text-brand-ink/60">
+          Edit the bio, photo, gender, and social link for every speaker across all events.
+          To add a new speaker, open the Events tab and edit that event.
+        </p>
+      </div>
+      {isLoading ? (
+        <p className="mt-6 text-brand-ink/50">Loading…</p>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {(data ?? []).map((s) => (
+            <div key={s.id} className="rounded-2xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                className="flex w-full items-center justify-between gap-4 p-4 text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border bg-brand-sand">
+                    <img src={speakerPhotoUrl(s as any)} alt={s.name} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-brand-ink">{s.name}</p>
+                    <p className="truncate text-xs text-brand-ink/50">
+                      {s.title || '—'}
+                      {s.events?.title ? ` · ${s.events.title}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs text-brand-purple">
+                  {editingId === s.id ? 'Close' : 'Edit'}
+                </span>
+              </button>
+              {editingId === s.id && (
+                <SpeakerEditPanel
+                  row={s}
+                  onSaved={() => {
+                    qc.invalidateQueries({ queryKey: ['admin', 'speakers'] });
+                    qc.invalidateQueries({ queryKey: ['speakers'] });
+                    qc.invalidateQueries({ queryKey: ['speaker'] });
+                    qc.invalidateQueries({ queryKey: ['event-speakers'] });
+                    setEditingId(null);
+                  }}
+                />
+              )}
+            </div>
+          ))}
+          {data && data.length === 0 && (
+            <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-brand-ink/50">
+              No speakers yet. Add speakers from within an event.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpeakerEditPanel({ row, onSaved }: { row: SpeakerAdminRow; onSaved: () => void }) {
+  const [name, setName] = useState(row.name);
+  const [title, setTitle] = useState(row.title ?? '');
+  const [bio, setBio] = useState(row.bio ?? '');
+  const [photo, setPhoto] = useState<string | null>(row.photo_url);
+  const [social, setSocial] = useState(row.social_url ?? '');
+  const [gender, setGender] = useState<'female' | 'male' | 'unspecified'>(
+    (row.gender ?? 'female') as 'female' | 'male' | 'unspecified',
+  );
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await (supabase as any)
+      .from('event_speakers')
+      .update({
+        name: name.trim(),
+        title: title.trim() || null,
+        bio: bio || null,
+        photo_url: photo,
+        social_url: social.trim() || null,
+        gender,
+      })
+      .eq('id', row.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success('Speaker updated');
+    onSaved();
+  };
+
+  return (
+    <div className="border-t border-border bg-brand-sand/20 p-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Name">
+          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label="Title / role">
+          <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
+        </Field>
+        <Field label="Photo">
+          <ImageUploadField
+            value={photo}
+            onChange={setPhoto}
+            folder="speakers"
+            label="Upload speaker photo"
+            lockRatio="1:1"
+            preview="circle"
+            warning="Speaker photos must be square (1:1). Non-square uploads are center-cropped automatically."
+          />
+        </Field>
+        <Field label="Social URL">
+          <input className={inputCls} value={social} onChange={(e) => setSocial(e.target.value)} placeholder="LinkedIn, Instagram, X, email — separate multiple with commas" />
+        </Field>
+        <Field label="Gender (for placeholder image)">
+          <select
+            className={inputCls}
+            value={gender}
+            onChange={(e) => setGender(e.target.value as 'female' | 'male' | 'unspecified')}
+          >
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="unspecified">Prefer not to say</option>
+          </select>
+        </Field>
+      </div>
+      <div className="mt-4">
+        <p className="text-xs uppercase tracking-widest text-brand-ink/60">Bio</p>
+        <div className="mt-1.5">
+          <RichTextEditor
+            value={bio}
+            onChange={setBio}
+            placeholder="Short bio — appears on the speaker profile page"
+            minHeight={160}
+          />
+        </div>
+      </div>
+      <div className="mt-4">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+        >
+          <Save size={14} /> {saving ? 'Saving…' : 'Save changes'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------- NEWSLETTER ----------------- */
+
+type NewsletterDraft = {
+  id: string;
+  subject: string | null;
+  preview_text: string | null;
+  body_html: string | null;
+  status: string;
+  updated_at: string;
+};
+
+function NewsletterAdmin() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [subject, setSubject] = useState('');
+  const [preview, setPreview] = useState('');
+  const [body, setBody] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const { data: drafts } = useQuery({
+    queryKey: ['admin', 'newsletter-drafts'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('newsletter_drafts')
+        .select('id, subject, preview_text, body_html, status, updated_at')
+        .order('updated_at', { ascending: false });
+      return (data ?? []) as NewsletterDraft[];
+    },
+  });
+
+  const startNew = () => {
+    setEditingId(null);
+    setSubject('');
+    setPreview('');
+    setBody('');
+  };
+
+  const loadDraft = (d: NewsletterDraft) => {
+    setEditingId(d.id);
+    setSubject(d.subject ?? '');
+    setPreview(d.preview_text ?? '');
+    setBody(d.body_html ?? '');
+  };
+
+  const save = async () => {
+    if (!subject.trim()) return toast.error('Add a subject line first');
+    setSaving(true);
+    const payload = {
+      subject: subject.trim(),
+      preview_text: preview.trim() || null,
+      body_html: body,
+      status: 'draft',
+      author_id: user?.id,
+    };
+    if (editingId) {
+      const { error } = await (supabase as any)
+        .from('newsletter_drafts')
+        .update(payload)
+        .eq('id', editingId);
+      setSaving(false);
+      if (error) return toast.error(error.message);
+    } else {
+      const { data, error } = await (supabase as any)
+        .from('newsletter_drafts')
+        .insert(payload)
+        .select('id')
+        .single();
+      setSaving(false);
+      if (error) return toast.error(error.message);
+      setEditingId(data.id);
+    }
+    toast.success('Draft saved');
+    qc.invalidateQueries({ queryKey: ['admin', 'newsletter-drafts'] });
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm('Delete this draft?')) return;
+    const { error } = await (supabase as any).from('newsletter_drafts').delete().eq('id', id);
+    if (error) return toast.error(error.message);
+    if (editingId === id) startNew();
+    qc.invalidateQueries({ queryKey: ['admin', 'newsletter-drafts'] });
+  };
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl">Newsletter</h2>
+            <p className="mt-1 text-sm text-brand-ink/60">
+              {editingId ? 'Editing draft.' : 'Composing a new draft.'} Sending is coming soon — for now, save drafts here.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={startNew}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:border-brand-purple"
+          >
+            <Plus size={14} /> New draft
+          </button>
+        </div>
+
+        <div className="mt-6 space-y-4 rounded-2xl border border-border bg-card p-6">
+          <Field label="Subject line">
+            <input
+              className={inputCls}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="What's this newsletter about?"
+            />
+          </Field>
+          <Field label="Preview text (shown in inbox preview)">
+            <input
+              className={inputCls}
+              value={preview}
+              onChange={(e) => setPreview(e.target.value)}
+              placeholder="A one-line teaser"
+            />
+          </Field>
+          <div>
+            <p className="text-xs uppercase tracking-widest text-brand-ink/60">Body</p>
+            <div className="mt-1.5">
+              <RichTextEditor
+                value={body}
+                onChange={setBody}
+                placeholder="Write the newsletter…"
+                minHeight={280}
+              />
+            </div>
+          </div>
+          <div>
+            <button
+              onClick={save}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+            >
+              <Save size={14} /> {saving ? 'Saving…' : editingId ? 'Save draft' : 'Create draft'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <h3 className="font-display text-lg text-brand-ink">Drafts</h3>
+        <div className="mt-3 space-y-2">
+          {(drafts ?? []).map((d) => (
+            <div
+              key={d.id}
+              className={`flex items-start justify-between gap-2 rounded-xl border p-3 ${
+                editingId === d.id ? 'border-brand-purple bg-brand-purple/5' : 'border-border bg-card'
+              }`}
+            >
+              <button type="button" onClick={() => loadDraft(d)} className="min-w-0 flex-1 text-left">
+                <p className="truncate text-sm font-medium text-brand-ink">{d.subject || 'Untitled draft'}</p>
+                <p className="mt-0.5 text-[11px] uppercase tracking-widest text-brand-ink/50">
+                  {d.status} · {new Date(d.updated_at).toLocaleDateString()}
+                </p>
+              </button>
+              <button
+                onClick={() => remove(d.id)}
+                className="rounded-full border border-border p-1.5 text-destructive hover:border-destructive"
+                aria-label="Delete draft"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
+          {drafts && drafts.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-brand-ink/50">
+              No drafts yet.
+            </p>
+          )}
+        </div>
+      </aside>
+    </div>
+  );
+}
