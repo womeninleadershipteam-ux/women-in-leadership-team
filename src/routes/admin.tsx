@@ -225,6 +225,8 @@ function EventsAdmin() {
         photo_url: s.photo_url || null,
         photo_aspect_ratio: s.photo_aspect_ratio || '4:5',
         social_url: s.social_url?.trim() || null,
+        bio: s.bio?.trim() || null,
+        gender: s.gender ?? 'female',
         display_order: i,
       }));
     if (cleanSpeakers.length > 0) {
@@ -239,8 +241,10 @@ function EventsAdmin() {
     setEditing(null);
     qc.invalidateQueries({ queryKey: ['admin', 'events'] });
     qc.invalidateQueries({ queryKey: ['events'] });
+    qc.invalidateQueries({ queryKey: ['event'] });
     qc.invalidateQueries({ queryKey: ['event-speakers'] });
     qc.invalidateQueries({ queryKey: ['speakers'] });
+    qc.invalidateQueries({ queryKey: ['speaker'] });
     return true;
   };
 
@@ -358,6 +362,8 @@ function EventEditor({
         photo_url: s.photo_url,
         photo_aspect_ratio: s.photo_aspect_ratio || '4:5',
         social_url: s.social_url,
+        bio: (s as any).bio ?? null,
+        gender: ((s as any).gender ?? 'female') as 'female' | 'male' | 'unspecified',
       })));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
