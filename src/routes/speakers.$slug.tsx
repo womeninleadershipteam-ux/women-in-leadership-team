@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ExternalLink, Mail, Globe, Linkedin, Twitter, Instagram } from 'lucide-react';
+import { ExternalLink, Mail, Globe, Linkedin, Twitter, Instagram, Phone } from 'lucide-react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
@@ -15,6 +15,13 @@ type Speaker = {
   social_url: string | null;
   gender: string | null;
   events: { id: string; slug: string; title: string; event_date: string; status: string } | null;
+};
+
+type ContactLink = {
+  raw: string;
+  href: string;
+  label: string;
+  Icon: typeof Globe;
 };
 
 export const Route = createFileRoute('/speakers/$slug')({
@@ -54,25 +61,43 @@ export const Route = createFileRoute('/speakers/$slug')({
   ),
 });
 
-function detectKind(url: string) {
-  const u = url.toLowerCase();
-  if (u.startsWith('mailto:')) return { label: 'Email', Icon: Mail };
-  if (u.includes('linkedin.com')) return { label: 'LinkedIn', Icon: Linkedin };
-  if (u.includes('twitter.com') || u.includes('x.com')) return { label: 'X / Twitter', Icon: Twitter };
-  if (u.includes('instagram.com')) return { label: 'Instagram', Icon: Instagram };
-  return { label: 'Website', Icon: Globe };
+function normalizeContactLink(value: string): ContactLink | null {
+  const raw = value.trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) || lower.startsWith('mailto:');
+  const isPhone = /^\+?[\d\s().-]{7,}$/.test(raw) || lower.startsWith('tel:');
+
+  if (isEmail) {
+    const email = raw.replace(/^mailto:/i, '');
+    return { raw, href: `mailto:${email}`, label: email, Icon: Mail };
+  }
+  if (isPhone) {
+    const phone = raw.replace(/^tel:/i, '');
+    return { raw, href: `tel:${phone.replace(/\s+/g, '')}`, label: phone, Icon: Phone };
+  }
+
+  const href = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const u = href.toLowerCase();
+  if (u.includes('linkedin.com')) return { raw, href, label: 'LinkedIn', Icon: Linkedin };
+  if (u.includes('twitter.com') || u.includes('x.com')) return { raw, href, label: 'X / Twitter', Icon: Twitter };
+  if (u.includes('instagram.com')) return { raw, href, label: 'Instagram', Icon: Instagram };
+  return { raw, href, label: 'Website', Icon: Globe };
 }
 
 function SpeakerDetailPage() {
   const { slug } = Route.useParams();
   const { data: speaker, isLoading } = useQuery({
     queryKey: ['speaker', slug],
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('event_speakers')
         .select('id, slug, name, title, bio, photo_url, social_url, gender, events(id, slug, title, event_date, status)')
         .eq('slug', slug)
         .maybeSingle();
+      if (error) throw error;
       return data as Speaker | null;
     },
   });
@@ -81,11 +106,12 @@ function SpeakerDetailPage() {
     queryKey: ['speaker', 'other-events', slug, speaker?.name],
     enabled: !!speaker?.name,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('event_speakers')
         .select('id, name, events(id, slug, title, event_date, status)')
         .eq('name', speaker!.name)
         .neq('id', speaker!.id);
+      if (error) throw error;
       return ((data ?? []) as any[])
         .map((r) => r.events)
         .filter(Boolean);
@@ -103,8 +129,8 @@ function SpeakerDetailPage() {
 
   const links = (speaker.social_url ?? '')
     .split(/[\s,]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+    .map(normalizeContactLink)
+    .filter(Boolean) as ContactLink[];
 
   const allEvents = [speaker.events, ...((otherAppearances as any[]) ?? [])].filter(Boolean) as Speaker['events'][];
 
@@ -132,7 +158,7 @@ function SpeakerDetailPage() {
             {speaker.bio && (
               speaker.bio.includes('<') ? (
                 <div
-                  className="prose prose-sm mt-6 max-w-none text-brand-ink/80"
+                  className="rich-text-content mt-6 max-w-none text-brand-ink/80"
                   dangerouslySetInnerHTML={{ __html: speaker.bio }}
                 />
               ) : (
@@ -144,19 +170,20 @@ function SpeakerDetailPage() {
 
             {links.length > 0 && (
               <div className="mt-6">
-                <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Connect</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Contact and social links</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {links.map((href) => {
-                    const { label, Icon } = detectKind(href);
+                  {links.map(({ raw, href, label, Icon }) => {
                     return (
                       <a
-                        key={href}
+                        key={`${label}-${href}`}
                         href={href}
-                        target="_blank"
-                        rel="noreferrer"
+                        target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
+                        rel={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : 'noreferrer'}
+                        aria-label={raw}
                         className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-brand-ink hover:border-brand-purple hover:text-brand-purple"
                       >
-                        <Icon size={14} /> {label} <ExternalLink size={12} className="opacity-60" />
+                        <Icon size={14} /> {label}
+                        {!href.startsWith('mailto:') && !href.startsWith('tel:') && <ExternalLink size={12} className="opacity-60" />}
                       </a>
                     );
                   })}

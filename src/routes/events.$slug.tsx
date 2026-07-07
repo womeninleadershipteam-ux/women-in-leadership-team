@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound, redirect } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
@@ -61,13 +62,17 @@ export const Route = createFileRoute('/events/$slug')({
 
 function EventDetailPage() {
   const { slug } = Route.useParams();
+  const { id } = Route.useLoaderData();
+  const queryClient = useQueryClient();
   const { data: ev, isLoading } = useQuery({
     queryKey: ['event', slug],
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .eq('slug', slug)
+        .eq('id', id)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -77,13 +82,15 @@ function EventDetailPage() {
   const { data: related } = useQuery({
     queryKey: ['events', 'related', ev?.id],
     enabled: !!ev?.id,
+    refetchOnMount: 'always',
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('events')
         .select('id,slug,title,event_date,image_url,status,location')
         .neq('id', ev!.id)
         .order('event_date', { ascending: false })
         .limit(6);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -91,23 +98,34 @@ function EventDetailPage() {
   const { data: eventSpeakers } = useQuery({
     queryKey: ['event-speakers', ev?.id],
     enabled: !!ev?.id,
+    refetchOnMount: 'always',
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('event_speakers')
-        .select('id, slug, name, title, photo_url, social_url, gender')
+        .select('id, slug, name, title, bio, photo_url, social_url, gender')
         .eq('event_id', ev!.id)
         .order('display_order');
+      if (error) throw error;
       return (data ?? []) as {
         id: string;
         slug: string;
         name: string;
         title: string | null;
+        bio: string | null;
         photo_url: string | null;
         social_url: string | null;
         gender: string | null;
       }[];
     },
   });
+
+  useEffect(() => {
+    if (!ev) return;
+    queryClient.setQueryData(['events', 'all'], (old: any[] | undefined) => {
+      if (!old?.length) return old;
+      return old.map((item) => (item.id === ev.id ? { ...item, ...ev } : item));
+    });
+  }, [ev, queryClient]);
 
   if (isLoading) {
     return (
