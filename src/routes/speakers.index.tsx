@@ -33,14 +33,24 @@ type EventSpeakerWithEvent = {
 function useEventSpeakers() {
   return useQuery({
     queryKey: ['speakers', 'by-event'],
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('event_speakers')
         .select('id, slug, name, title, bio, photo_url, social_url, gender, events(id, title, event_date, status)')
         .order('display_order', { ascending: true });
+      if (error) throw error;
       return (data ?? []) as EventSpeakerWithEvent[];
     },
   });
+}
+
+function htmlToText(html: string) {
+  if (typeof document === 'undefined') return html.replace(/<[^>]*>/g, ' ');
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  return el.textContent || el.innerText || '';
 }
 
 function SpeakersPage() {
@@ -128,7 +138,7 @@ function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
           {eventDate ? ` · ${eventDate}` : ''}
         </p>
       )}
-      {s.bio && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-brand-ink/75">{s.bio}</p>}
+      {s.bio && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-brand-ink/75">{htmlToText(s.bio)}</p>}
       <Link to="/speakers/$slug" params={{ slug: s.slug }} className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-purple hover:underline">
         View profile →
       </Link>

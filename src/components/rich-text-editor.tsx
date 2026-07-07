@@ -17,14 +17,22 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 160 }
     extensions: [
       StarterKit,
       Underline,
-      Link.configure({ openOnClick: false, autolink: true }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: 'noreferrer',
+          target: '_blank',
+        },
+      }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm max-w-none focus:outline-none px-3 py-3 text-brand-ink',
+          'rich-text-content max-w-none focus:outline-none px-3 py-3 text-brand-ink',
         style: `min-height:${minHeight}px`,
       },
     },
@@ -34,7 +42,8 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 160 }
   useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
-    if (value && value !== current) editor.commands.setContent(value, { emitUpdate: false });
+    const next = value || '';
+    if (next !== current) editor.commands.setContent(next, { emitUpdate: false });
   }, [value, editor]);
 
   if (!editor) return null;

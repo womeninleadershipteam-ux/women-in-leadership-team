@@ -21,11 +21,14 @@ export const Route = createFileRoute('/events/')({
 function useEvents() {
   return useQuery({
     queryKey: ['events', 'all'],
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('events')
         .select('*')
         .order('event_date', { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
   });

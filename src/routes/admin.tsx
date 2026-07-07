@@ -190,23 +190,31 @@ function EventsAdmin() {
       speakers: speakerRows.map((s) => s.name.trim()).filter(Boolean).join(', '),
     };
     let eventId = id;
+    let savedEvent: any = null;
     if (id) {
-      const { error } = await supabase.from('events').update(payload as any).eq('id', id);
+      const { data, error } = await supabase
+        .from('events')
+        .update(payload as any)
+        .eq('id', id)
+        .select('*')
+        .single();
       if (error) {
         toast.error(error.message);
         return false;
       }
+      savedEvent = data;
     } else {
       const { data, error } = await supabase
         .from('events')
         .insert(payload as any)
-        .select('id')
+        .select('*')
         .single();
       if (error || !data) {
         toast.error(error?.message ?? 'Could not create event');
         return false;
       }
       eventId = data.id;
+      savedEvent = data;
     }
 
     // Replace this event's speaker list
@@ -237,14 +245,34 @@ function EventsAdmin() {
       }
     }
 
+    if (savedEvent) {
+      qc.setQueryData(['event', savedEvent.slug], savedEvent);
+      qc.setQueryData(['events', 'all'], (old: any[] | undefined) => {
+        if (!old?.length) return old;
+        const exists = old.some((event) => event.id === savedEvent.id);
+        const next = exists
+          ? old.map((event) => (event.id === savedEvent.id ? { ...event, ...savedEvent } : event))
+          : [savedEvent, ...old];
+        return [...next].sort(
+          (a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime(),
+        );
+      });
+    }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['admin', 'events'] }),
+      qc.invalidateQueries({ queryKey: ['events'] }),
+      qc.invalidateQueries({ queryKey: ['event'] }),
+      qc.invalidateQueries({ queryKey: ['event-speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speaker'] }),
+    ]);
+    await Promise.all([
+      qc.refetchQueries({ queryKey: ['events'] }),
+      qc.refetchQueries({ queryKey: ['event'] }),
+      qc.refetchQueries({ queryKey: ['event-speakers'] }),
+    ]);
     toast.success('Saved — visible to all visitors');
     setEditing(null);
-    qc.invalidateQueries({ queryKey: ['admin', 'events'] });
-    qc.invalidateQueries({ queryKey: ['events'] });
-    qc.invalidateQueries({ queryKey: ['event'] });
-    qc.invalidateQueries({ queryKey: ['event-speakers'] });
-    qc.invalidateQueries({ queryKey: ['speakers'] });
-    qc.invalidateQueries({ queryKey: ['speaker'] });
     return true;
   };
 
@@ -253,9 +281,14 @@ function EventsAdmin() {
     const { error } = await supabase.from('events').delete().eq('id', id);
     if (error) return toast.error(error.message);
     toast.success('Deleted');
-    qc.invalidateQueries({ queryKey: ['admin', 'events'] });
-    qc.invalidateQueries({ queryKey: ['events'] });
-    qc.invalidateQueries({ queryKey: ['speakers'] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['admin', 'events'] }),
+      qc.invalidateQueries({ queryKey: ['events'] }),
+      qc.invalidateQueries({ queryKey: ['event'] }),
+      qc.invalidateQueries({ queryKey: ['event-speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speaker'] }),
+    ]);
   };
 
   return (
@@ -1095,6 +1128,7 @@ function SpeakersAdmin() {
 }
 
 function SpeakerEditPanel({ row, onSaved }: { row: SpeakerAdminRow; onSaved: () => void }) {
+  const qc = useQueryClient();
   const [name, setName] = useState(row.name);
   const [title, setTitle] = useState(row.title ?? '');
   const [bio, setBio] = useState(row.bio ?? '');
@@ -1120,6 +1154,19 @@ function SpeakerEditPanel({ row, onSaved }: { row: SpeakerAdminRow; onSaved: () 
       .eq('id', row.id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['admin', 'speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speakers'] }),
+      qc.invalidateQueries({ queryKey: ['speaker'] }),
+      qc.invalidateQueries({ queryKey: ['event-speakers'] }),
+      qc.invalidateQueries({ queryKey: ['events'] }),
+      qc.invalidateQueries({ queryKey: ['event'] }),
+    ]);
+    await Promise.all([
+      qc.refetchQueries({ queryKey: ['speakers'] }),
+      qc.refetchQueries({ queryKey: ['speaker'] }),
+      qc.refetchQueries({ queryKey: ['event-speakers'] }),
+    ]);
     toast.success('Speaker updated');
     onSaved();
   };
