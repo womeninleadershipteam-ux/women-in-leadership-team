@@ -373,6 +373,38 @@ function EventEditor({
   const draftR = useDraft(`event:${draftKey}:row`, r, setR);
   const draftSp = useDraft(`event:${draftKey}:speakers`, sp, setSp);
 
+  // Existing distinct speakers across all events — for the "select existing" dropdown.
+  const { data: knownSpeakers } = useQuery({
+    queryKey: ['admin', 'known-speakers'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('event_speakers')
+        .select('name, title, photo_url, social_url, bio, gender')
+        .order('name');
+      const map = new Map<string, EventSpeaker>();
+      for (const s of (data ?? []) as any[]) {
+        const key = (s.name ?? '').trim().toLowerCase();
+        if (!key) continue;
+        const prev = map.get(key);
+        // Prefer the entry with the most information filled in.
+        const score = (x: any) =>
+          (x.bio ? 4 : 0) + (x.photo_url ? 2 : 0) + (x.social_url ? 1 : 0) + (x.title ? 1 : 0);
+        if (!prev || score(s) > score(prev)) {
+          map.set(key, {
+            name: s.name,
+            title: s.title ?? '',
+            photo_url: s.photo_url ?? '',
+            photo_aspect_ratio: '1:1',
+            social_url: s.social_url ?? '',
+            bio: s.bio ?? '',
+            gender: (s.gender ?? 'female') as 'female' | 'male' | 'unspecified',
+          });
+        }
+      }
+      return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    },
+  });
+
   // Load this event's existing speakers (unless a draft was restored)
   const { data: existingSp } = useQuery({
     queryKey: ['admin', 'event-speakers', row.id],
@@ -404,6 +436,22 @@ function EventEditor({
 
   const updateSpeaker = (i: number, patch: Partial<EventSpeaker>) =>
     setSp((p) => p.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+
+  const pickExisting = (i: number, key: string) => {
+    if (!key || !knownSpeakers) return;
+    const found = knownSpeakers.find((k) => k.name.trim().toLowerCase() === key);
+    if (!found) return;
+    // Reuse the existing profile — admin can then just update the bio if needed.
+    updateSpeaker(i, {
+      name: found.name,
+      title: found.title ?? '',
+      photo_url: found.photo_url ?? '',
+      photo_aspect_ratio: found.photo_aspect_ratio ?? '1:1',
+      social_url: found.social_url ?? '',
+      bio: found.bio ?? '',
+      gender: found.gender ?? 'female',
+    });
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -542,6 +590,33 @@ function EventEditor({
         <div className="mt-4 space-y-4">
           {sp.map((s, i) => (
             <div key={i} className="rounded-xl border border-border bg-background p-4">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-widest text-brand-ink/60">
+                  Choose existing speaker
+                </span>
+                <select
+                  className={inputCls + ' max-w-xs'}
+                  value={
+                    knownSpeakers?.find(
+                      (k) => k.name.trim().toLowerCase() === (s.name ?? '').trim().toLowerCase(),
+                    )
+                      ? (s.name ?? '').trim().toLowerCase()
+                      : ''
+                  }
+                  onChange={(e) => pickExisting(i, e.target.value)}
+                >
+                  <option value="">— New speaker —</option>
+                  {(knownSpeakers ?? []).map((k) => (
+                    <option key={k.name} value={k.name.trim().toLowerCase()}>
+                      {k.name}
+                      {k.title ? ` · ${k.title}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] text-brand-ink/50">
+                  Selecting reuses their profile — edit the bio below if you want to update it for everyone.
+                </span>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Name">
                   <input className={inputCls} value={s.name} onChange={(e) => updateSpeaker(i, { name: e.target.value })} />
