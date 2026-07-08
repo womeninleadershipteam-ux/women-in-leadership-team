@@ -243,6 +243,23 @@ function EventsAdmin() {
         toast.error(`Event saved, but speakers failed: ${insErr.message}`);
         return false;
       }
+      // Keep shared speaker profiles in sync across every event they appear in.
+      // If the admin updated a bio/photo/social/title/gender here, copy it to
+      // the same-named rows on other events so profiles don't drift.
+      for (const s of cleanSpeakers) {
+        const patch: Record<string, any> = {};
+        if (s.bio) patch.bio = s.bio;
+        if (s.photo_url) patch.photo_url = s.photo_url;
+        if (s.social_url) patch.social_url = s.social_url;
+        if (s.title) patch.title = s.title;
+        if (s.gender) patch.gender = s.gender;
+        if (Object.keys(patch).length === 0) continue;
+        await sb
+          .from('event_speakers')
+          .update(patch)
+          .ilike('name', s.name)
+          .neq('event_id', eventId);
+      }
     }
 
     if (savedEvent) {
