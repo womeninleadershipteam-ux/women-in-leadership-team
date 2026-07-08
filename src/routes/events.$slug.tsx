@@ -165,20 +165,58 @@ function EventDetailPage() {
         </Link>
 
         <div className="mt-8 grid gap-12 md:grid-cols-[1fr,1.2fr] md:items-start">
-          {/* Flyer — show in full (no cropping), preserving its natural aspect */}
-          <div className="overflow-hidden rounded-2xl bg-brand-sand shadow-xl ring-1 ring-border/40">
-            {ev.image_url ? (
+          {/* Flyer — scaled down to preserve original aspect, clickable for full view */}
+          <button
+            type="button"
+            onClick={() => setFlyerOpen(true)}
+            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-brand-sand p-4 shadow-xl ring-1 ring-border/40 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+            aria-label="View event flyer in full size"
+          >
+            <div className="mx-auto max-w-[280px]">
+              {ev.image_url ? (
+                <img
+                  src={ev.image_url}
+                  alt={`${ev.title} flyer`}
+                  className="block h-auto max-h-[420px] w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+              ) : (
+                <div className="flex aspect-square h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
+                  WIL
+                </div>
+              )}
+            </div>
+            <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="rounded-full bg-brand-ink/70 px-2.5 py-1 text-xs text-white backdrop-blur-sm">
+                <i className="bx bx-fullscreen" /> Click to expand
+              </span>
+            </div>
+          </button>
+
+          {/* Flyer lightbox */}
+          {flyerOpen && ev.image_url && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-brand-ink/90 p-4 backdrop-blur-sm"
+              onClick={() => setFlyerOpen(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Event flyer full view"
+            >
+              <button
+                type="button"
+                onClick={() => setFlyerOpen(false)}
+                className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+                aria-label="Close flyer"
+              >
+                <i className="bx bx-x text-2xl" />
+              </button>
               <img
                 src={ev.image_url}
-                alt={`${ev.title} flyer`}
-                className="block h-auto w-full object-contain"
+                alt={`${ev.title} flyer full view`}
+                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
               />
-            ) : (
-              <div className="flex aspect-square h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
-                WIL
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Details */}
           <div>
