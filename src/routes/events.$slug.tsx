@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, redirect } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { speakerPhotoUrl } from '@/lib/speaker-placeholder';
@@ -63,6 +63,7 @@ export const Route = createFileRoute('/events/$slug')({
 function EventDetailPage() {
   const { slug } = Route.useParams();
   const { id } = Route.useLoaderData();
+  const [flyerOpen, setFlyerOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data: ev, isLoading } = useQuery({
     queryKey: ['event', slug],
