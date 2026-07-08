@@ -1246,6 +1246,18 @@ function SpeakerEditPanel({ row, onSaved }: { row: SpeakerAdminRow; onSaved: () 
       .eq('id', row.id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    // Sync every other event this speaker appears in so the profile stays consistent.
+    await (supabase as any)
+      .from('event_speakers')
+      .update({
+        title: title.trim() || null,
+        bio: bio || null,
+        photo_url: photo,
+        social_url: social.trim() || null,
+        gender,
+      })
+      .ilike('name', name.trim())
+      .neq('id', row.id);
     await Promise.all([
       qc.invalidateQueries({ queryKey: ['admin', 'speakers'] }),
       qc.invalidateQueries({ queryKey: ['speakers'] }),
