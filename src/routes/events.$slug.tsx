@@ -164,18 +164,16 @@ function EventDetailPage() {
         </Link>
 
         <div className="mt-8 grid gap-12 md:grid-cols-[1fr,1.2fr] md:items-start">
-          {/* Flyer 1:1 */}
-          <div className="aspect-square overflow-hidden rounded-2xl bg-brand-sand shadow-xl ring-1 ring-border/40">
+          {/* Flyer — show in full (no cropping), preserving its natural aspect */}
+          <div className="overflow-hidden rounded-2xl bg-brand-sand shadow-xl ring-1 ring-border/40">
             {ev.image_url ? (
               <img
                 src={ev.image_url}
                 alt={`${ev.title} flyer`}
-                className="h-full w-full object-cover"
-                width={1200}
-                height={1200}
+                className="block h-auto w-full object-contain"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
+              <div className="flex aspect-square h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
                 WIL
               </div>
             )}
