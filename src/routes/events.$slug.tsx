@@ -166,31 +166,33 @@ function EventDetailPage() {
 
         <div className="mt-8 grid gap-12 md:grid-cols-[1fr,1.2fr] md:items-start">
           {/* Flyer — scaled down to preserve original aspect, clickable for full view */}
-          <button
-            type="button"
-            onClick={() => setFlyerOpen(true)}
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-brand-sand p-4 shadow-xl ring-1 ring-border/40 focus:outline-none focus:ring-2 focus:ring-brand-purple"
-            aria-label="View event flyer in full size"
-          >
-            <div className="mx-auto max-w-[280px]">
-              {ev.image_url ? (
-                <img
-                  src={ev.image_url}
-                  alt={`${ev.title} flyer`}
-                  className="block h-auto max-h-[420px] w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              ) : (
-                <div className="flex aspect-square h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
-                  WIL
-                </div>
-              )}
-            </div>
-            <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4 opacity-0 transition-opacity group-hover:opacity-100">
-              <span className="rounded-full bg-brand-ink/70 px-2.5 py-1 text-xs text-white backdrop-blur-sm">
-                <i className="bx bx-fullscreen" /> Click to expand
-              </span>
-            </div>
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setFlyerOpen(true)}
+              className="group relative cursor-pointer overflow-hidden rounded-2xl bg-brand-sand p-3 shadow-xl ring-1 ring-border/40 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+              aria-label="View event flyer in full size"
+            >
+              <div className="mx-auto max-w-[260px]">
+                {ev.image_url ? (
+                  <img
+                    src={ev.image_url}
+                    alt={`${ev.title} flyer`}
+                    className="block h-auto max-h-[380px] w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                ) : (
+                  <div className="flex aspect-square h-full w-full items-center justify-center font-display text-6xl text-brand-clay/40">
+                    WIL
+                  </div>
+                )}
+              </div>
+              <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="rounded-full bg-brand-ink/70 px-2.5 py-1 text-xs text-white backdrop-blur-sm">
+                  <i className="bx bx-fullscreen" /> Click to expand
+                </span>
+              </div>
+            </button>
+          </div>
 
           {/* Flyer lightbox */}
           {flyerOpen && ev.image_url && (
