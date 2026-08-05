@@ -261,6 +261,7 @@ export type Database = {
           location: string | null
           location_details: Json
           location_type: string
+          recording_url: string | null
           registration_url: string | null
           slug: string
           speakers: string | null
@@ -281,6 +282,7 @@ export type Database = {
           location?: string | null
           location_details?: Json
           location_type?: string
+          recording_url?: string | null
           registration_url?: string | null
           slug: string
           speakers?: string | null
@@ -301,6 +303,7 @@ export type Database = {
           location?: string | null
           location_details?: Json
           location_type?: string
+          recording_url?: string | null
           registration_url?: string | null
           slug?: string
           speakers?: string | null
