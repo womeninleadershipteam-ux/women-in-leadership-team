@@ -342,7 +342,7 @@ function EventDetailPage() {
             )}
 
             {/* Register CTA */}
-            <div className="mt-10">
+            <div className="mt-10 flex flex-wrap items-center gap-3">
               {ev.registration_url && !isPast ? (
                 <a
                   href={ev.registration_url}
@@ -368,6 +368,26 @@ function EventDetailPage() {
                   Registration link coming soon — join our WhatsApp to be first to know.
                 </p>
               ) : null}
+
+              {recordingUrl && (
+                <a
+                  href={recordingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-brand-purple/40 px-6 py-3 text-sm font-medium text-brand-purple hover:bg-brand-purple/10"
+                >
+                  <i className="bx bx-video text-lg" /> Watch the recording
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={shareEvent}
+                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm text-brand-ink hover:border-brand-purple hover:text-brand-purple"
+              >
+                <i className={`bx ${copied ? 'bx-check' : 'bx-share-alt'} text-lg`} />
+                {copied ? 'Link copied' : 'Share event'}
+              </button>
             </div>
           </div>
         </div>
