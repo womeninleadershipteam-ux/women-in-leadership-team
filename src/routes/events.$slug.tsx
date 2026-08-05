@@ -75,6 +75,7 @@ function EventDetailPage() {
   const { slug } = Route.useParams();
   const { id } = Route.useLoaderData();
   const [flyerOpen, setFlyerOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
   const { data: ev, isLoading } = useQuery({
     queryKey: ['event', slug],
@@ -164,6 +165,22 @@ function EventDetailPage() {
   const topic = (ev as any).topic as string | null | undefined;
   const upcomingRelated = (related ?? []).filter((r) => r.status === 'upcoming');
   const pastRelated = (related ?? []).filter((r) => r.status === 'past');
+  const recordingUrl = (ev as any).recording_url as string | null | undefined;
+
+  const shareEvent = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: ev.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* user dismissed share sheet */
+    }
+  };
 
   return (
     <SiteLayout>
@@ -228,6 +245,16 @@ function EventDetailPage() {
                 className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
+              <a
+                href={ev.image_url}
+                download={`${ev.slug ?? 'event'}-flyer`}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-brand-ink shadow-lg hover:bg-white/90"
+              >
+                <i className="bx bx-download text-lg" /> Download flyer
+              </a>
             </div>
           )}
 
