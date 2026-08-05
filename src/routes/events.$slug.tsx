@@ -18,22 +18,33 @@ export const Route = createFileRoute('/events/$slug')({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from('events')
-      .select('id')
+      .select('id, title, description')
       .eq('slug', params.slug)
       .maybeSingle();
     if (!data) throw notFound();
-    return { id: data.id };
+    return { id: data.id, title: data.title as string, description: (data.description as string | null) ?? null };
   },
   component: EventDetailPage,
-  head: () => ({
-    meta: [
-      { title: 'Event — Women in Leadership' },
-      {
-        name: 'description',
-        content: 'Event details, speakers, and registration.',
-      },
-    ],
-  }),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.title
+      ? `${loaderData.title} — Women in Leadership`
+      : 'Event — Women in Leadership';
+    const description =
+      loaderData?.description?.slice(0, 155) ?? 'Event details, speakers, and registration.';
+    const url = `https://women-in-leadership-team.lovable.app/events/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:type', content: 'article' },
+        { property: 'og:url', content: url },
+        { name: 'twitter:card', content: 'summary_large_image' },
+      ],
+      links: [{ rel: 'canonical', href: url }],
+    };
+  },
   notFoundComponent: () => (
     <SiteLayout>
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
