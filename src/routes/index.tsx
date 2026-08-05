@@ -198,7 +198,7 @@ function HomePage() {
             Core leadership pillars
           </p>
           <h2 className="mt-3 font-display text-3xl text-brand-ink md:text-4xl">
-            What we build, in <span className="font-serif italic">every</span> session.
+            What we build, in <span className="font-serif italic text-brand-purple">every</span> session.
           </h2>
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
