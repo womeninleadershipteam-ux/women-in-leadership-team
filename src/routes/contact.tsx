@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Instagram, Mail, MessageCircle, Send } from 'lucide-react';
+import { Instagram, Mail, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/lib/use-site-settings';
+
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
@@ -77,7 +78,7 @@ function ContactPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-3 text-brand-ink hover:text-brand-purple"
                   >
-                    <MessageCircle size={18} /> WhatsApp community
+                    <i className="bx bxl-whatsapp text-lg" /> WhatsApp community
                   </a>
                 </li>
               )}
