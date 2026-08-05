@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Instagram, Mail, MessageCircle, Send } from 'lucide-react';
+import { Instagram, Mail, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { SiteLayout } from '@/components/site-layout';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/lib/use-site-settings';
+
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
