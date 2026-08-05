@@ -78,7 +78,7 @@ function ContactPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-3 text-brand-ink hover:text-brand-purple"
                   >
-                    <MessageCircle size={18} /> WhatsApp community
+                    <i className="bx bxl-whatsapp text-lg" /> WhatsApp community
                   </a>
                 </li>
               )}
