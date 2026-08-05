@@ -105,7 +105,7 @@ function EventsPage() {
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-12 md:pt-24">
         <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Events</p>
         <h1 className="mt-4 font-display text-5xl text-brand-ink md:text-6xl">
-          Where the work <span className="font-serif italic">happens.</span>
+          Where the work <span className="font-serif italic text-brand-purple">happens.</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-brand-ink/70">
           Intimate panels, hands-on workshops, and big conversations. Every event is built

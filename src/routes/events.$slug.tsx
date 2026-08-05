@@ -18,22 +18,33 @@ export const Route = createFileRoute('/events/$slug')({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from('events')
-      .select('id')
+      .select('id, title, description')
       .eq('slug', params.slug)
       .maybeSingle();
     if (!data) throw notFound();
-    return { id: data.id };
+    return { id: data.id, title: data.title as string, description: (data.description as string | null) ?? null };
   },
   component: EventDetailPage,
-  head: () => ({
-    meta: [
-      { title: 'Event — Women in Leadership' },
-      {
-        name: 'description',
-        content: 'Event details, speakers, and registration.',
-      },
-    ],
-  }),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.title
+      ? `${loaderData.title} — Women in Leadership`
+      : 'Event — Women in Leadership';
+    const description =
+      loaderData?.description?.slice(0, 155) ?? 'Event details, speakers, and registration.';
+    const url = `https://women-in-leadership-team.lovable.app/events/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:type', content: 'article' },
+        { property: 'og:url', content: url },
+        { name: 'twitter:card', content: 'summary_large_image' },
+      ],
+      links: [{ rel: 'canonical', href: url }],
+    };
+  },
   notFoundComponent: () => (
     <SiteLayout>
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
@@ -64,6 +75,7 @@ function EventDetailPage() {
   const { slug } = Route.useParams();
   const { id } = Route.useLoaderData();
   const [flyerOpen, setFlyerOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
   const { data: ev, isLoading } = useQuery({
     queryKey: ['event', slug],
@@ -153,6 +165,22 @@ function EventDetailPage() {
   const topic = (ev as any).topic as string | null | undefined;
   const upcomingRelated = (related ?? []).filter((r) => r.status === 'upcoming');
   const pastRelated = (related ?? []).filter((r) => r.status === 'past');
+  const recordingUrl = (ev as any).recording_url as string | null | undefined;
+
+  const shareEvent = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: ev.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* user dismissed share sheet */
+    }
+  };
 
   return (
     <SiteLayout>
@@ -217,6 +245,16 @@ function EventDetailPage() {
                 className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
+              <a
+                href={ev.image_url}
+                download={`${ev.slug ?? 'event'}-flyer`}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-brand-ink shadow-lg hover:bg-white/90"
+              >
+                <i className="bx bx-download text-lg" /> Download flyer
+              </a>
             </div>
           )}
 
@@ -304,7 +342,7 @@ function EventDetailPage() {
             )}
 
             {/* Register CTA */}
-            <div className="mt-10">
+            <div className="mt-10 flex flex-wrap items-center gap-3">
               {ev.registration_url && !isPast ? (
                 <a
                   href={ev.registration_url}
@@ -330,6 +368,26 @@ function EventDetailPage() {
                   Registration link coming soon — join our WhatsApp to be first to know.
                 </p>
               ) : null}
+
+              {recordingUrl && (
+                <a
+                  href={recordingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-brand-purple/40 px-6 py-3 text-sm font-medium text-brand-purple hover:bg-brand-purple/10"
+                >
+                  <i className="bx bx-video text-lg" /> Watch the recording
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={shareEvent}
+                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm text-brand-ink hover:border-brand-purple hover:text-brand-purple"
+              >
+                <i className={`bx ${copied ? 'bx-check' : 'bx-share-alt'} text-lg`} />
+                {copied ? 'Link copied' : 'Share event'}
+              </button>
             </div>
           </div>
         </div>

@@ -29,6 +29,7 @@ type EventRow = {
   image_aspect_ratio: ImageRatio;
   speakers: string | null;
   registration_url: string | null;
+  recording_url: string | null;
   theme: string | null;
   topic: string | null;
   status: 'upcoming' | 'past';
@@ -161,6 +162,7 @@ const emptyEvent: EventRow = {
   image_aspect_ratio: '1:1',
   speakers: '',
   registration_url: '',
+  recording_url: '',
   theme: '',
   topic: '',
   status: 'upcoming',
@@ -570,6 +572,14 @@ function EventEditor({
         </Field>
         <Field label="Registration URL">
           <input className={inputCls} value={r.registration_url ?? ''} onChange={(e) => u('registration_url', e.target.value)} />
+        </Field>
+        <Field label="Recording link">
+          <input
+            className={inputCls}
+            placeholder="https://youtube.com/…"
+            value={r.recording_url ?? ''}
+            onChange={(e) => u('recording_url', e.target.value)}
+          />
         </Field>
         <Field label="Theme">
           <input className={inputCls} value={r.theme ?? ''} onChange={(e) => u('theme', e.target.value)} />

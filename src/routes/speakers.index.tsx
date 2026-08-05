@@ -62,7 +62,7 @@ function SpeakersPage() {
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-16 md:pt-24">
         <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Speakers</p>
         <h1 className="mt-4 font-display text-5xl text-brand-ink md:text-6xl">
-          Women worth <span className="font-serif italic">listening to.</span>
+          Women worth <span className="font-serif italic text-brand-purple">listening to.</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-brand-ink/70">
           Founders, executives, creatives, and quietly brilliant operators. Every speaker

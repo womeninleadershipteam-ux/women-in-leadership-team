@@ -40,7 +40,7 @@ function CommunityPage() {
       <section className="mx-auto max-w-4xl px-6 pt-16 pb-16 md:pt-24">
         <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">The community</p>
         <h1 className="mt-4 font-display text-5xl leading-tight text-brand-ink md:text-6xl">
-          About <span className="font-serif italic">us.</span>
+          About <span className="font-serif italic text-brand-purple">us.</span>
         </h1>
         <p className="mt-8 font-serif text-2xl leading-relaxed text-brand-ink/80">
           Women in Leadership is a transformational platform designed to equip, inspire,

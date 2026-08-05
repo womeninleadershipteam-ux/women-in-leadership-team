@@ -28,19 +28,34 @@ export const Route = createFileRoute('/speakers/$slug')({
   loader: async ({ params }) => {
     const { data } = await (supabase as any)
       .from('event_speakers')
-      .select('id')
+      .select('id, name, title')
       .eq('slug', params.slug)
       .maybeSingle();
     if (!data) throw notFound();
-    return { id: data.id };
+    return { id: data.id as string, name: data.name as string, title: (data.title as string | null) ?? null };
   },
   component: SpeakerDetailPage,
-  head: () => ({
-    meta: [
-      { title: 'Speaker — Women in Leadership' },
-      { name: 'description', content: 'Speaker profile, bio, and the events they spoke at.' },
-    ],
-  }),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.name
+      ? `${loaderData.name} — Women in Leadership`
+      : 'Speaker — Women in Leadership';
+    const description = loaderData?.name
+      ? `${loaderData.name}${loaderData.title ? `, ${loaderData.title}` : ''} — profile, bio, and events they spoke at.`
+      : 'Speaker profile, bio, and the events they spoke at.';
+    const url = `https://women-in-leadership-team.lovable.app/speakers/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:type', content: 'profile' },
+        { property: 'og:url', content: url },
+        { name: 'twitter:card', content: 'summary_large_image' },
+      ],
+      links: [{ rel: 'canonical', href: url }],
+    };
+  },
   notFoundComponent: () => (
     <SiteLayout>
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">

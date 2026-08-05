@@ -51,7 +51,7 @@ function ContactPage() {
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-brand-purple">Contact</p>
             <h1 className="mt-4 font-display text-5xl leading-tight text-brand-ink md:text-6xl">
-              Let's <span className="font-serif italic">talk.</span>
+              Let's <span className="font-serif italic text-brand-purple">talk.</span>
             </h1>
             <p className="mt-6 text-lg text-brand-ink/70">
               Speaking, sponsorship, mentorship, or just a hello — we'd love to hear from
