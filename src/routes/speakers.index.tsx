@@ -30,6 +30,55 @@ type EventSpeakerWithEvent = {
   events: { id: string; title: string; event_date: string; status: string } | null;
 };
 
+type SpeakerProfile = Omit<EventSpeakerWithEvent, 'events'> & {
+  events: NonNullable<EventSpeakerWithEvent['events']>[];
+};
+
+function speakerNameKey(name: string) {
+  return name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+function mergeSpeakerRows(rows: EventSpeakerWithEvent[]): SpeakerProfile[] {
+  const profiles = new Map<string, SpeakerProfile>();
+
+  for (const row of rows) {
+    const key = speakerNameKey(row.name);
+    const current = profiles.get(key);
+
+    if (!current) {
+      profiles.set(key, {
+        ...row,
+        events: row.events ? [row.events] : [],
+      });
+      continue;
+    }
+
+    const details = {
+      title: current.title ?? row.title,
+      bio: current.bio || row.bio,
+      photo_url: current.photo_url || row.photo_url,
+      social_url: current.social_url || row.social_url,
+      gender: current.gender ?? row.gender,
+    };
+    const eventIds = new Set(current.events.map((event) => event.id));
+
+    profiles.set(key, {
+      ...current,
+      ...details,
+      events: row.events && !eventIds.has(row.events.id)
+        ? [...current.events, row.events]
+        : current.events,
+    });
+  }
+
+  return Array.from(profiles.values());
+}
+
 function useEventSpeakers() {
   return useQuery({
     queryKey: ['speakers', 'by-event'],
@@ -41,7 +90,7 @@ function useEventSpeakers() {
         .select('id, slug, name, title, bio, photo_url, social_url, gender, events(id, title, event_date, status)')
         .order('display_order', { ascending: true });
       if (error) throw error;
-      return (data ?? []) as EventSpeakerWithEvent[];
+      return mergeSpeakerRows((data ?? []) as EventSpeakerWithEvent[]);
     },
   });
 }
@@ -55,8 +104,8 @@ function htmlToText(html: string) {
 
 function SpeakersPage() {
   const { data: speakers, isLoading } = useEventSpeakers();
-  const upcoming = (speakers ?? []).filter((s) => s.events?.status === 'upcoming');
-  const past = (speakers ?? []).filter((s) => s.events?.status === 'past');
+  const upcoming = (speakers ?? []).filter((s) => s.events.some((event) => event.status === 'upcoming'));
+  const past = (speakers ?? []).filter((s) => !s.events.some((event) => event.status === 'upcoming'));
   return (
     <SiteLayout>
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-16 md:pt-24">
@@ -110,9 +159,12 @@ function SpeakersPage() {
   );
 }
 
-function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
-  const eventDate = s.events
-    ? new Date(s.events.event_date).toLocaleDateString(undefined, {
+function SpeakerCard({ s }: { s: SpeakerProfile }) {
+  const event = [...s.events].sort(
+    (a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime(),
+  )[0];
+  const eventDate = event
+    ? new Date(event.event_date).toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -132,10 +184,11 @@ function SpeakerCard({ s }: { s: EventSpeakerWithEvent }) {
         <h3 className="mt-5 font-display text-2xl text-brand-ink group-hover:text-brand-purple">{s.name}</h3>
       </Link>
       {s.title && <p className="text-sm text-brand-ink/60">{s.title}</p>}
-      {s.events && (
+      {event && (
         <p className="mt-2 text-xs uppercase tracking-widest text-brand-ink/50">
-          {s.events.title}
+          {event.title}
           {eventDate ? ` · ${eventDate}` : ''}
+          {s.events.length > 1 ? ` · ${s.events.length} events` : ''}
         </p>
       )}
       {s.bio && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-brand-ink/75">{htmlToText(s.bio)}</p>}
